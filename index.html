@@ -1,1 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Game Day Arcade</title>
+<meta name="theme-color" content="#0d1511">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Game Day">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:#0d1511}
+[hidden]{display:none!important}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Graduate&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: arcade lobby — stadium-board wordmark, then a grid of game cabinets (one column on phones, two on wide screens). Single night-game look shared with the games. */
+:root{
+  --ink:#0d1511;
+  --panel:#16221b;
+  --panel2:#1c2b22;
+  --line:#2a3a30;
+  --chalk:#f3efe4;
+  --muted:#9fb1a5;
+  --gold:#f2b33d;
+  --turf:#2f6b3a;
+  --display:"Graduate","Rockwell","Georgia",serif;
+  --body:"Barlow Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+body{background:var(--ink);color:var(--chalk);font-family:var(--body);margin:0}
+.wrap{max-width:760px;margin:0 auto;padding-block:22px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+header{display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(36px,11vw,64px);line-height:.95;margin:0;letter-spacing:.01em;text-wrap:balance}
+h1 span{color:var(--gold)}
+.lede{margin:4px 0 0;font-size:18px;color:var(--muted);font-weight:500;max-width:34em}
+.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.art{aspect-ratio:16/9;max-width:100%;display:block;background:var(--turf)}
+.art svg{width:100%;height:100%;display:block}
+.info{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px}
+.tag{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.card h2{font-family:var(--display);font-weight:400;font-size:28px;margin:0;letter-spacing:.02em}
+.card p{margin:0;font-size:17px;line-height:1.3;color:var(--muted);font-weight:500}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:6px}
+.best{font-size:15px;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+.best b{color:var(--chalk);font-family:var(--display);font-weight:400;font-size:20px;margin-left:4px}
+.play{font-family:var(--display);font-size:20px;letter-spacing:.06em;background:var(--gold);color:#1b1405;text-decoration:none;padding:12px 26px;border-radius:6px}
+.play:focus-visible{outline:3px solid #5aa8ff;outline-offset:2px}
+.soon{border:1px dashed var(--line);border-radius:10px;padding:18px 16px;display:flex;flex-direction:column;gap:6px;justify-content:center}
+.soon h3{margin:0;font-family:var(--display);font-weight:400;font-size:20px;color:var(--chalk)}
+.soon p{margin:0;font-size:16px;color:var(--muted);line-height:1.3}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Sports games</span>
+    <h1>Game Day <span>Arcade</span></h1>
+    <p class="lede">Pick a game and play. Your best scores are saved on this device.</p>
+  </header>
+
+  <section class="games" aria-label="Games">
+    <article class="card">
+      <a class="art" href="games/long-bomb/index.html" aria-label="Play Long Bomb">
+        <svg viewBox="0 0 320 180" role="img" aria-label="Quarterback throwing a deep pass downfield">
+          <rect width="320" height="180" fill="#2f6b3a"/>
+          <g fill="#2b6335"><rect y="0" width="320" height="30"/><rect y="60" width="320" height="30"/><rect y="120" width="320" height="30"/></g>
+          <g stroke="#f3efe4" stroke-opacity=".7" stroke-width="2"><line x1="0" y1="30" x2="320" y2="30"/><line x1="0" y1="60" x2="320" y2="60"/><line x1="0" y1="90" x2="320" y2="90"/><line x1="0" y1="120" x2="320" y2="120"/><line x1="0" y1="150" x2="320" y2="150"/></g>
+          <line x1="0" y1="138" x2="320" y2="138" stroke="#5aa8ff" stroke-width="4"/>
+          <line x1="0" y1="96" x2="320" y2="96" stroke="#f2b33d" stroke-width="4"/>
+          <path d="M150 118 Q 185 -5 228 22" fill="none" stroke="#f3efe4" stroke-width="2.5" stroke-dasharray="6 6"/>
+          <g transform="translate(228 22) rotate(-35)"><ellipse rx="13" ry="8" fill="#7a4320" stroke="#3d1f0c" stroke-width="1.5"/><line x1="-5" y1="0" x2="5" y2="0" stroke="#f3efe4" stroke-width="2"/></g>
+          <g transform="translate(150 152)"><ellipse cx="2" cy="10" rx="14" ry="5" fill="#000" fill-opacity=".3"/><rect x="-8" y="-6" width="7" height="16" rx="2" fill="#d9a637"/><rect x="1" y="-6" width="7" height="16" rx="2" fill="#d9a637"/><rect x="-12" y="-26" width="24" height="22" rx="7" fill="#f3efe4"/><text x="0" y="-11" text-anchor="middle" font-family="Barlow Condensed, Arial, sans-serif" font-weight="700" font-size="12" fill="#14263f">12</text><circle cy="-33" r="8" fill="#14263f"/><rect x="-1.2" y="-41" width="2.4" height="15" fill="#f2b33d"/></g>
+          <g transform="translate(270 66)"><ellipse cx="2" cy="10" rx="12" ry="4" fill="#000" fill-opacity=".3"/><rect x="-7" y="-4" width="6" height="14" rx="2" fill="#d9a637"/><rect x="1" y="-4" width="6" height="14" rx="2" fill="#d9a637"/><rect x="-11" y="-22" width="22" height="19" rx="6" fill="#f3efe4"/><text x="0" y="-8" text-anchor="middle" font-family="Barlow Condensed, Arial, sans-serif" font-weight="700" font-size="11" fill="#14263f">88</text><circle cy="-28" r="7" fill="#14263f"/></g>
+          <g transform="translate(250 72)"><rect x="-6" y="-2" width="5" height="12" rx="2" fill="#f3efe4"/><rect x="1" y="-2" width="5" height="12" rx="2" fill="#f3efe4"/><rect x="-10" y="-19" width="20" height="18" rx="6" fill="#c62a40"/><text x="0" y="-6" text-anchor="middle" font-family="Barlow Condensed, Arial, sans-serif" font-weight="700" font-size="10" fill="#fff">21</text><circle cy="-25" r="7" fill="#b5203a"/></g>
+        </svg>
+      </a>
+      <div class="info">
+        <span class="tag">Football · Passing</span>
+        <h2>Long Bomb</h2>
+        <p>Beat the pass rush and hit your receivers deep. Gain 10 yards in 4 downs. Every touchdown adds a level.</p>
+        <div class="meta">
+          <span class="best">Best <b id="best-lb">0</b></span>
+          <a class="play" href="games/long-bomb/index.html">PLAY</a>
+        </div>
+      </div>
+    </article>
+
+    <div class="soon">
+      <h3>More games on the way</h3>
+      <p>New sports will show up here as they're added.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+// Each game saves its own best score in this browser; the lobby reads it to show on the card.
+const GAMES=[{id:'best-lb',key:'lb-best'}];
+GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const el=document.getElementById(g.id);if(el)el.textContent=v;});
+</script>
+
+<script>
+if('serviceWorker' in navigator){addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
+</script>
+</body>
+</html>
 
