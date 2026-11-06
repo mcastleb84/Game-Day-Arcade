@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Word Search</title>
+<meta name="theme-color" content="#0d1511">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Graduate&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: one-screen puzzle — back link, scoreboard (theme | level | found + time), the letter grid, the word list, then one action button. Same night look as the arcade. */
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --ink:#0d1511;
+  --panel:#16221b;
+  --line:#2a3a30;
+  --chalk:#f3efe4;
+  --muted:#9fb1a5;
+  --gold:#f2b33d;
+  --display:"Graduate","Rockwell","Georgia",serif;
+  --body:"Barlow Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--ink);height:100%}
+body{height:100%;margin:0;background:var(--ink);color:var(--chalk);font-family:var(--body);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+[hidden]{display:none!important}
+.app{height:100%;max-width:560px;margin:0 auto;display:grid;grid-template-rows:auto auto 1fr auto auto;gap:10px;
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.back{justify-self:start;color:var(--muted);font-weight:600;font-size:16px;letter-spacing:.04em;text-decoration:none;padding:2px 0}
+.back:hover,.back:focus-visible{color:var(--gold)}
+.board{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 6px;min-width:0}
+.cell .lbl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.cell .val{font-family:var(--display);font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.mid{border-left:1px solid var(--line);border-right:1px solid var(--line);padding-inline:18px}
+.mid .val{color:var(--gold);font-size:26px}
+.gridwrap{position:relative;min-height:0;display:flex;align-items:center;justify-content:center}
+canvas{display:block;touch-action:none;cursor:crosshair;border-radius:6px}
+.banner{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(13,21,17,.95);border:1px solid var(--line);
+  border-radius:8px;padding:16px 18px;text-align:center;width:min(86%,340px);pointer-events:none}
+.banner h2{font-family:var(--display);font-weight:400;font-size:26px;margin:0 0 6px;color:var(--gold)}
+.banner p{margin:0;font-size:17px;color:var(--muted);font-weight:500;line-height:1.3}
+.intro{position:absolute;inset:0;background:rgba(13,21,17,.97);overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;z-index:5;border-radius:6px}
+.intro h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0;color:var(--gold)}
+.intro .goal{margin:0;font-size:16px;line-height:1.3;font-weight:500}
+.intro ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.intro li{display:grid;grid-template-columns:5.2em 1fr;gap:8px;font-size:15px;line-height:1.25;color:var(--muted);font-weight:500}
+.intro li b{font-weight:700;color:var(--chalk);letter-spacing:.06em;text-transform:uppercase;font-size:13px;padding-top:1px}
+.intro button{margin-top:auto}
+.words{display:flex;flex-wrap:wrap;gap:6px 8px;justify-content:center;min-height:2em}
+.words span{font-size:17px;font-weight:700;letter-spacing:.06em;padding:3px 8px;border-radius:4px;background:var(--panel);border:1px solid var(--line)}
+.words span.found{text-decoration:line-through;color:var(--muted);background:transparent;border-color:transparent}
+button{font-family:var(--display);font-size:20px;letter-spacing:.05em;padding:14px 10px;border-radius:6px;border:0;background:var(--gold);color:#1b1405;cursor:pointer;touch-action:manipulation;width:100%}
+button:disabled{background:var(--panel);color:var(--muted);border:1px solid var(--line);cursor:default;font-size:16px}
+button:focus-visible{outline:3px solid #5aa8ff;outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="app">
+  <a class="back" href="../../">‹ All games</a>
+  <div class="board" aria-live="polite">
+    <div class="cell"><span class="lbl">Theme</span><span class="val" id="theme">–</span></div>
+    <div class="cell mid"><span class="lbl">Level</span><span class="val" id="lv">1</span></div>
+    <div class="cell"><span class="lbl" id="foundLbl">Found</span><span class="val" id="found">0/0</span></div>
+  </div>
+  <div class="gridwrap" id="wrap">
+    <canvas id="c" aria-label="Letter grid. Drag across letters to circle a word."></canvas>
+    <div class="banner" id="banner" hidden><h2 id="bh"></h2><p id="bp"></p></div>
+    <div class="intro" id="intro" role="dialog" aria-labelledby="introH">
+      <h2 id="introH">How to Play</h2>
+      <p class="goal">Find every sports word hidden in the grid. Each puzzle you finish moves you up a level.</p>
+      <ul>
+        <li><b>Find</b><span>Drag your finger from the first letter of a word to the last, then let go.</span></li>
+        <li><b>Directions</b><span>Words run across and down at first. Later levels add diagonals and backwards words.</span></li>
+        <li><b>Levels</b><span>The grid gets bigger and there are more words to find as you go.</span></li>
+        <li><b>Saved</b><span>Your level is saved, so you can pick up where you left off.</span></li>
+      </ul>
+      <button id="introGo" type="button">LET'S PLAY</button>
+    </div>
+  </div>
+  <div class="words" id="words" aria-label="Words to find"></div>
+  <button id="btn" type="button" disabled>FIND ALL THE WORDS</button>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+const THEMES={
+  Football:['TOUCHDOWN','FUMBLE','PUNT','KICKOFF','BLITZ','HUDDLE','SAFETY','FIELDGOAL','ENDZONE','SACK','SNAP','TACKLE','RECEIVER','LINEMAN','HELMET','PYLON','GRIDIRON','DOWNS','PASS','REFEREE'],
+  Basketball:['DUNK','REBOUND','LAYUP','DRIBBLE','ASSIST','JUMPSHOT','FREETHROW','BACKBOARD','HOOP','CENTER','GUARD','FORWARD','BLOCK','STEAL','COURT','BUZZER','TIPOFF','ALLEYOOP','TRAVEL','NET'],
+  Baseball:['HOMERUN','PITCHER','CATCHER','DUGOUT','BULLPEN','STRIKE','INNING','SHORTSTOP','BUNT','DIAMOND','GLOVE','SLIDER','CURVEBALL','OUTFIELD','MOUND','BATTER','DOUBLE','TRIPLE','WALK','UMPIRE'],
+  Soccer:['GOAL','KEEPER','PENALTY','CORNER','HEADER','OFFSIDE','STRIKER','DEFENDER','MIDFIELD','VOLLEY','FREEKICK','PITCH','CLEATS','REFEREE','DRIBBLE','CROSS','WALL','NET','SHINGUARD','REDCARD'],
+  Hockey:['PUCK','STICK','GOALIE','SLAPSHOT','ICING','POWERPLAY','FACEOFF','RINK','BLUELINE','CHECK','HATTRICK','PENALTY','ZAMBONI','SKATES','ASSIST','CREASE','BOARDS','SHUTOUT','WRISTER'],
+  Golf:['BIRDIE','EAGLE','BOGEY','PAR','PUTTER','DRIVER','IRON','WEDGE','FAIRWAY','GREEN','BUNKER','CADDIE','TEE','HOLEINONE','ROUGH','CLUB','SWING','MULLIGAN','DIVOT'],
+  Tennis:['ACE','SERVE','VOLLEY','LOVE','DEUCE','RACKET','BASELINE','LOB','SMASH','FOREHAND','BACKHAND','NET','MATCH','ADVANTAGE','TIEBREAK','COURT','FAULT','RALLY']
+};
+const ALL8=[[1,0],[0,1],[1,1],[1,-1],[-1,0],[0,-1],[-1,-1],[-1,1]];
+// Level settings: grid size, word count, allowed directions.
+function cfg(lv){
+  const n=Math.min(12,7+lv),count=Math.min(13,5+lv);
+  let dirs=[[1,0],[0,1]];
+  if(lv>=2)dirs.push([1,1]);
+  if(lv>=3)dirs.push([1,-1]);
+  if(lv>=4)dirs.push([-1,0],[0,-1]);
+  if(lv>=6)dirs.push([-1,-1],[-1,1]);
+  return {n,count,dirs};
+}
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+function build(lv,themeName){
+  const {n,count,dirs}=cfg(lv);
+  for(let attempt=0;attempt<80;attempt++){
+    const pool=shuffle(THEMES[themeName].filter(w=>w.length<=n)).slice(0,count).sort((a,b)=>b.length-a.length);
+    const g=Array.from({length:n},()=>Array(n).fill('')),placed=[];
+    let ok=true;
+    for(const w of pool){
+      let done=false;
+      for(let t=0;t<300&&!done;t++){
+        const [dx,dy]=dirs[Math.floor(Math.random()*dirs.length)];
+        const x0=Math.floor(Math.random()*n),y0=Math.floor(Math.random()*n),x1=x0+dx*(w.length-1),y1=y0+dy*(w.length-1);
+        if(x1<0||x1>=n||y1<0||y1>=n)continue;
+        let fit=true;for(let i=0;i<w.length;i++){const c=g[y0+dy*i][x0+dx*i];if(c&&c!==w[i]){fit=false;break;}}
+        if(!fit)continue;
+        for(let i=0;i<w.length;i++)g[y0+dy*i][x0+dx*i]=w[i];
+        placed.push({w,x0,y0,x1,y1,found:false});done=true;
+      }
+      if(!done){ok=false;break;}
+    }
+    if(!ok)continue;
+    const AB='ABCDEFGHIJKLMNOPRSTUWY';
+    for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(!g[y][x])g[y][x]=AB[Math.floor(Math.random()*AB.length)];
+    return {n,g,words:placed.sort((a,b)=>a.w.localeCompare(b.w))};
+  }
+  return null;
+}
+
+/* ---------- state ---------- */
+let lv=+store.get('ws-level')||1,solved=+store.get('ws-solved')||0,P=null,theme='',sel=null,t0=0,done=false,tick=null;
+const COLORS=['rgba(242,179,61,.42)','rgba(90,168,255,.42)','rgba(214,51,74,.42)','rgba(80,190,120,.42)','rgba(180,120,255,.42)','rgba(255,140,60,.42)'];
+
+function newPuzzle(){
+  const names=Object.keys(THEMES);let last=store.get('ws-theme');
+  do{theme=names[Math.floor(Math.random()*names.length)];}while(theme===last&&names.length>1);
+  store.set('ws-theme',theme);
+  P=build(lv,theme);P.words.forEach((w,i)=>w.col=COLORS[i%COLORS.length]);
+  done=false;sel=null;t0=performance.now();$('banner').hidden=true;
+  $('btn').disabled=true;$('btn').textContent='FIND ALL THE WORDS';
+  hud();list();resize();
+  clearInterval(tick);tick=setInterval(hud,1000);
+}
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+function hud(){
+  $('theme').textContent=theme;$('lv').textContent=lv;
+  const f=P?P.words.filter(w=>w.found).length:0;
+  $('found').textContent=f+'/'+(P?P.words.length:0);
+}
+function list(){
+  const el=$('words');el.innerHTML='';
+  P.words.forEach(w=>{const s=document.createElement('span');s.textContent=w.w;if(w.found)s.className='found';el.appendChild(s);});
+}
+function finish(){
+  done=true;clearInterval(tick);
+  const secs=(performance.now()-t0)/1000;
+  solved++;lv++;store.set('ws-solved',solved);store.set('ws-level',lv);
+  $('bh').textContent='ALL FOUND!';$('bp').textContent='Solved in '+fmt(secs)+'. Puzzles solved: '+solved+'.';$('banner').hidden=false;
+  $('btn').disabled=false;$('btn').textContent='NEXT PUZZLE';
+  [523,659,784,1047].forEach((f,i)=>tone(f,.2,i*.1));
+}
+$('btn').addEventListener('click',()=>{if(done)newPuzzle();});
+
+/* ---------- sound ---------- */
+let AC=null;
+function tone(f,d,delay){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.14,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d+.05);}catch(e){}}
+
+/* ---------- canvas ---------- */
+const cv=$('c'),ctx=cv.getContext('2d'),wrap=$('wrap');
+let S=0,CS=0;
+function resize(){
+  const r=wrap.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,3);
+  S=Math.floor(Math.min(r.width,r.height));if(!P)return;CS=S/P.n;
+  cv.style.width=S+'px';cv.style.height=S+'px';cv.width=S*dpr;cv.height=S*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);draw();
+}
+addEventListener('resize',resize);
+function capsule(x0,y0,x1,y1,col){
+  const ax=(x0+.5)*CS,ay=(y0+.5)*CS,bx=(x1+.5)*CS,by=(y1+.5)*CS;
+  ctx.strokeStyle=col;ctx.lineWidth=CS*.78;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+}
+function draw(){
+  ctx.clearRect(0,0,S,S);
+  ctx.fillStyle='#16221b';ctx.beginPath();ctx.roundRect?ctx.roundRect(0,0,S,S,6):ctx.rect(0,0,S,S);ctx.fill();
+  for(const w of P.words)if(w.found)capsule(w.x0,w.y0,w.x1,w.y1,w.col);
+  if(sel)capsule(sel.x0,sel.y0,sel.x1,sel.y1,'rgba(243,239,228,.28)');
+  ctx.fillStyle='#f3efe4';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='700 '+Math.round(CS*.58)+'px "Barlow Condensed","Arial Narrow",Arial,sans-serif';
+  for(let y=0;y<P.n;y++)for(let x=0;x<P.n;x++)ctx.fillText(P.g[y][x],(x+.5)*CS,(y+.53)*CS);
+}
+
+/* ---------- selecting ---------- */
+function cellAt(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)/CS-.5,y:(e.clientY-r.top)/CS-.5};}
+cv.addEventListener('pointerdown',e=>{
+  if(done||!P)return;const p=cellAt(e),x=Math.round(p.x),y=Math.round(p.y);
+  if(x<0||y<0||x>=P.n||y>=P.n)return;
+  sel={x0:x,y0:y,x1:x,y1:y,id:e.pointerId};try{cv.setPointerCapture(e.pointerId)}catch(_){}draw();
+});
+cv.addEventListener('pointermove',e=>{
+  if(!sel||e.pointerId!==sel.id)return;
+  const p=cellAt(e),dx=p.x-sel.x0,dy=p.y-sel.y0;
+  // snap to the nearest of 8 directions
+  const a=Math.round(Math.atan2(dy,dx)/(Math.PI/4)),ux=Math.round(Math.cos(a*Math.PI/4)),uy=Math.round(Math.sin(a*Math.PI/4));
+  let len=Math.round(ux&&uy?(Math.abs(dx)+Math.abs(dy))/2:Math.max(Math.abs(dx),Math.abs(dy)));
+  while(len>0){const x=sel.x0+ux*len,y=sel.y0+uy*len;if(x>=0&&y>=0&&x<P.n&&y<P.n)break;len--;}
+  sel.x1=sel.x0+ux*len;sel.y1=sel.y0+uy*len;draw();
+});
+function release(e){
+  if(!sel||e.pointerId!==sel.id)return;
+  const s=sel;sel=null;
+  const hit=P.words.find(w=>!w.found&&((w.x0===s.x0&&w.y0===s.y0&&w.x1===s.x1&&w.y1===s.y1)||(w.x0===s.x1&&w.y0===s.y1&&w.x1===s.x0&&w.y1===s.y0)));
+  if(hit){
+    hit.found=true;tone(660,.12);tone(990,.16,.08);list();hud();
+    if(P.words.every(w=>w.found))setTimeout(finish,250);
+  }else if(s.x0!==s.x1||s.y0!==s.y1){
+    // also accept a word spelled the same way somewhere else (rare duplicates)
+    const n=Math.max(Math.abs(s.x1-s.x0),Math.abs(s.y1-s.y0))+1,ux=Math.sign(s.x1-s.x0),uy=Math.sign(s.y1-s.y0);
+    let str='';for(let i=0;i<n;i++)str+=P.g[s.y0+uy*i][s.x0+ux*i];
+    const rev=[...str].reverse().join(''),alt=P.words.find(w=>!w.found&&(w.w===str||w.w===rev));
+    if(alt){alt.found=true;alt.x0=s.x0;alt.y0=s.y0;alt.x1=s.x1;alt.y1=s.y1;tone(660,.12);tone(990,.16,.08);list();hud();if(P.words.every(w=>w.found))setTimeout(finish,250);}
+    else tone(200,.12);
+  }
+  draw();
+}
+cv.addEventListener('pointerup',release);
+cv.addEventListener('pointercancel',e=>{if(sel&&e.pointerId===sel.id){sel=null;draw();}});
+
+$('introGo').addEventListener('click',()=>{$('intro').hidden=true;tone(0.0001,.01);});
+newPuzzle();
+})();
+</script>
+</body>
+</html>
