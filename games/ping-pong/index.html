@@ -105,7 +105,8 @@ const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const TW=9,TH=16,R=.2,WIN=7;          // table units: 9 wide, 16 long (real tables are 1.525 m x 2.74 m)
-const YP=TH-1.1,YC=1.1;                // paddle lines: you at the bottom, CPU at the top
+const YP=TH-1.1,YC=1.1;
+const GAME_SPEED=1.5; // 1 = original pace. Speeds up the ball and CPU paddle; pauses between points stay the same.                // paddle lines: you at the bottom, CPU at the top
 
 /* ---------- sound ---------- */
 let AC=null,muted=store.get('pp-mute')==='1';
@@ -236,7 +237,7 @@ function hitPaddle(pd,isMe){
   sfx.hit(isMe);
 }
 function step(dt){
-  const p=P();
+  const p=P(),g=dt*GAME_SPEED;
   // your paddle follows your finger (or arrow keys)
   if(keys.ArrowLeft||keys.KeyA)me.tx-=12*dt;if(keys.ArrowRight||keys.KeyD)me.tx+=12*dt;
   me.tx=Math.max(me.w/2-.3,Math.min(TW-me.w/2+.3,me.tx));
@@ -246,7 +247,7 @@ function step(dt){
   if(phase==='play'&&ball.vy<0&&ball.y<TH*p.react)target=predictX()+cpu.aim*(cpu.w/2);
   else if(phase==='serve'&&server()==='cpu')target=cpu.x;
   const sp=(phase==='play'&&ball.vy<0)?p.cpuSp:p.cpuSp*.5;
-  cpu.x+=Math.max(-sp*dt,Math.min(sp*dt,target-cpu.x));cpu.x=Math.max(cpu.w/2-.3,Math.min(TW-cpu.w/2+.3,cpu.x));cpu.v=(cpu.x-cx0)/dt;
+  cpu.x+=Math.max(-sp*g,Math.min(sp*g,target-cpu.x));cpu.x=Math.max(cpu.w/2-.3,Math.min(TW-cpu.w/2+.3,cpu.x));cpu.v=(cpu.x-cx0)/dt;
 
   if(phase==='serve'){
     if(server()==='me'){ball.x=me.x;ball.y=YP-.55;}
@@ -256,9 +257,9 @@ function step(dt){
   if(phase==='point'){timer+=dt;if(timer>1)afterPoint();return;}
   if(phase!=='play')return;
   // ball, in small sub-steps so fast shots never skip through a paddle
-  const n=Math.ceil(dt/(1/240));
+  const n=Math.ceil(g/(1/240));
   for(let i=0;i<n;i++){
-    const h=dt/n;ball.x+=ball.vx*h;ball.y+=ball.vy*h;
+    const h=g/n;ball.x+=ball.vx*h;ball.y+=ball.vy*h;
     if(ball.x<R){ball.x=R;ball.vx=Math.abs(ball.vx);sfx.wall();}
     if(ball.x>TW-R){ball.x=TW-R;ball.vx=-Math.abs(ball.vx);sfx.wall();}
     if(ball.vy>0&&ball.y+R>=YP-.12&&ball.y<YP+.25&&Math.abs(ball.x-me.x)<=me.w/2+R){ball.y=YP-.12-R;hitPaddle(me,true);}
