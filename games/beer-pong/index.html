@@ -184,7 +184,7 @@ function step(b,list,dt){
 
 /* ---------- difficulty ---------- */
 // CPU aim error (meters, one standard deviation). Shrinks every level.
-const cpuErr=()=>Math.max(.03,.1-.009*(lv-1));
+const cpuErr=()=>Math.max(.02,.06-.005*(lv-1));
 function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
 function cpuShot(list){
   const targets=list.filter(c=>c.side==='me'&&!c.hit),c=targets[Math.floor(Math.random()*targets.length)],e=cpuErr();
