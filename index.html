@@ -153,6 +153,32 @@ h1 span{color:var(--gold)}
     </article>
 
     <article class="card">
+      <a class="art" href="games/soccer/index.html" aria-label="Play Soccer Shootout">
+        <svg viewBox="0 0 320 180" role="img" aria-label="Soccer striker shooting past a defender at the goalie">
+          <rect width="320" height="180" fill="#1d4a2a"/>
+          <g fill="#22552f"><rect y="40" width="320" height="28"/><rect y="96" width="320" height="28"/><rect y="152" width="320" height="28"/></g>
+          <g fill="none" stroke="#f3efe4" stroke-opacity=".8" stroke-width="2"><rect x="70" y="26" width="180" height="78"/><rect x="118" y="26" width="84" height="28"/><path d="M128 104 A 40 40 0 0 0 192 104"/></g>
+          <rect x="132" y="10" width="56" height="16" fill="#f3efe4" fill-opacity=".18" stroke="#f3efe4" stroke-width="3"/>
+          <line x1="70" y1="26" x2="250" y2="26" stroke="#f3efe4" stroke-width="2"/>
+          <g transform="translate(150 33)"><rect x="-15" y="-5" width="30" height="10" rx="5" fill="#f2b33d"/><circle r="5" fill="#1b1405"/></g>
+          <path d="M168 132 Q 182 70 178 22" fill="none" stroke="#f3efe4" stroke-opacity=".7" stroke-width="2.5" stroke-dasharray="6 6"/>
+          <circle cx="178" cy="34" r="5" fill="#fff"/>
+          <g transform="translate(205 112)"><circle r="10" fill="#1f4f8f" stroke="#cfe3ff" stroke-width="2"/><text y="4" text-anchor="middle" font-family="Barlow Condensed, Arial, sans-serif" font-weight="700" font-size="11" fill="#cfe3ff">4</text></g>
+          <g transform="translate(162 142)"><circle r="11" fill="#d6334a" stroke="#f3efe4" stroke-width="2"/><text y="4" text-anchor="middle" font-family="Barlow Condensed, Arial, sans-serif" font-weight="700" font-size="12" fill="#f3efe4">9</text></g>
+        </svg>
+      </a>
+      <div class="info">
+        <span class="tag">Soccer · Versus the keeper</span>
+        <h2>Soccer Shootout</h2>
+        <p>Dribble in and beat the goalie. Defenders join at levels 3, 6 and 8, and a teammate joins at 8.</p>
+        <div class="meta">
+          <span class="best">Best level <b id="best-sc">–</b></span>
+          <a class="play" href="games/soccer/index.html">PLAY</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card">
       <a class="art" href="games/word-search/index.html" aria-label="Play Word Search">
         <svg viewBox="0 0 320 180" role="img" aria-label="Grid of letters with sports words circled">
           <rect width="320" height="180" fill="#101a15"/>
@@ -204,7 +230,7 @@ h1 span{color:var(--gold)}
 
 <script>
 // Each game saves its own best score in this browser; the lobby reads it to show on the card.
-const GAMES=[{id:'best-lb',key:'lb-best',none:'0'},{id:'best-pp',key:'pp-best',none:'–'},{id:'best-bp',key:'bp-best',none:'–'},{id:'best-ws',key:'ws-solved',none:'0'},{id:'best-cw',key:'cw-solved',none:'0'}];
+const GAMES=[{id:'best-lb',key:'lb-best',none:'0'},{id:'best-pp',key:'pp-best',none:'–'},{id:'best-bp',key:'bp-best',none:'–'},{id:'best-sc',key:'sc-best',none:'–'},{id:'best-ws',key:'ws-solved',none:'0'},{id:'best-cw',key:'cw-solved',none:'0'}];
 GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const el=document.getElementById(g.id);if(el)el.textContent=v||g.none;});
 </script>
 

@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Soccer Shootout</title>
+<meta name="theme-color" content="#0d1511">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Graduate&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: one-screen arena — menu bar, scoreboard (attempts | level | goals needed), the pitch from above, then the action buttons. Same night look as the arcade. */
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --ink:#0d1511;
+  --panel:#16221b;
+  --line:#2a3a30;
+  --chalk:#f3efe4;
+  --muted:#9fb1a5;
+  --gold:#f2b33d;
+  --me:#d6334a;
+  --def:#5aa8ff;
+  --good:#4fc27a;
+  --display:"Graduate","Rockwell","Georgia",serif;
+  --body:"Barlow Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--ink);height:100%}
+body{height:100%;margin:0;background:var(--ink);color:var(--chalk);font-family:var(--body);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+[hidden]{display:none!important}
+.app{height:100%;max-width:560px;margin:0 auto;display:grid;grid-template-rows:auto auto 1fr auto;gap:10px;
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.back{justify-self:start;color:var(--muted);font-weight:600;font-size:16px;letter-spacing:.04em;text-decoration:none;padding:2px 0}
+.board{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.side{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px 6px}
+.side .lbl,.mid .lbl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.score{font-family:var(--display);font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.score small{font-size:16px;color:var(--muted)}
+.pips{display:flex;gap:5px}
+.pips i{width:11px;height:11px;border-radius:50%;border:1px solid var(--line)}
+.pips i.g{background:var(--good);border-color:var(--good)}
+.pips i.m{background:var(--me);border-color:var(--me)}
+.mid{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 14px;border-left:1px solid var(--line);border-right:1px solid var(--line);min-width:7.5em}
+.mid .lv{font-family:var(--display);font-size:26px;color:var(--gold);line-height:1.05}
+.mid .sub{font-size:14px;color:var(--muted);font-weight:600;white-space:nowrap}
+.pitchwrap{position:relative;min-height:0;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:#1d4a2a}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.banner{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);background:rgba(13,21,17,.94);border:1px solid var(--line);
+  border-radius:8px;padding:14px 18px;text-align:center;width:min(86%,340px);pointer-events:none}
+.banner h2{font-family:var(--display);font-weight:400;font-size:28px;margin:0 0 4px;letter-spacing:.02em}
+.banner p{margin:0;font-size:17px;color:var(--muted);font-weight:500;line-height:1.3}
+.banner p:empty{display:none}
+.banner.good h2{color:var(--gold)} .banner.bad h2{color:var(--me)}
+.intro{position:absolute;inset:0;background:rgba(13,21,17,.96);overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;z-index:5}
+.intro h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0;color:var(--gold)}
+.intro .goal{margin:0;font-size:16px;line-height:1.3;font-weight:500}
+.intro ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.intro li{display:grid;grid-template-columns:5.2em 1fr;gap:8px;font-size:15px;line-height:1.25;color:var(--muted);font-weight:500}
+.intro li b{font-weight:700;color:var(--chalk);letter-spacing:.06em;text-transform:uppercase;font-size:13px;padding-top:1px}
+.intro .best{margin:0;font-size:15px;color:var(--muted)}
+.intro button{margin-top:auto}
+.controls{display:flex;gap:8px}
+button{font-family:var(--display);font-size:20px;letter-spacing:.05em;padding:14px 10px;border-radius:6px;border:0;background:var(--gold);color:#1b1405;cursor:pointer;touch-action:manipulation;flex:1}
+button:disabled{background:var(--panel);color:var(--muted);border:1px solid var(--line);cursor:default}
+button.alt{background:#20324a;color:#cfe3ff;border:1px solid #33507a}
+button:focus-visible{outline:3px solid var(--def);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="app">
+  <a class="back" href="../../">‹ All games</a>
+  <div class="board" aria-live="polite">
+    <div class="side"><span class="lbl">Attempts</span><span class="pips" id="pips"></span></div>
+    <div class="mid"><span class="lbl">Level</span><span class="lv" id="lv">1</span><span class="sub" id="sub">1 on the keeper</span></div>
+    <div class="side"><span class="lbl">Goals</span><span class="score" id="goals">0<small>/3</small></span></div>
+  </div>
+  <div class="pitchwrap" id="wrap">
+    <canvas id="c" aria-label="Soccer pitch from above. Drag anywhere to move your player, then shoot at the goal at the top."></canvas>
+    <div class="banner" id="banner" hidden><h2 id="bh"></h2><p id="bp"></p></div>
+    <div class="intro" id="intro" role="dialog" aria-labelledby="introH">
+      <h2 id="introH">How to Play</h2>
+      <p class="goal">Score 3 goals out of 5 attempts to beat the level. Miss too many and your run is over.</p>
+      <ul>
+        <li><b>Move</b><span>Put your finger anywhere on the field and drag. A joystick appears under your thumb.</span></li>
+        <li><b>Shoot</b><span>Tap SHOOT. The ball goes the way your player is facing, so steer toward a corner of the goal.</span></li>
+        <li><b>Levels</b><span>The goalie gets quicker every level. A defender joins at level 3, another at level 6, and a third at level 8.</span></li>
+        <li><b>Pass</b><span>From level 8 you get a teammate. Tap PASS to send the ball to them and take control of them.</span></li>
+        <li><b>Clock</b><span>You have 12 seconds to get a shot off on each attempt.</span></li>
+      </ul>
+      <p class="best" id="introBest" hidden></p>
+      <button id="introGo" type="button">LET'S PLAY</button>
+    </div>
+  </div>
+  <div class="controls">
+    <button id="pass" class="alt" type="button" hidden>PASS</button>
+    <button id="btn" type="button">START</button>
+  </div>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+/* ---------- pitch (units ~ meters / 2): goal at the top ---------- */
+const FW=20,FL=26,GL=1,PX0=7,PX1=13,TRIES=5,NEED=3,CLOCK=12;
+const PR=.55,BR=.28;  // player and ball radius
+
+/* ---------- difficulty ---------- */
+function D(lv){
+  return {
+    keeperSpd:Math.min(4.0,1.8+.26*(lv-1)),       // how fast the goalie slides
+    keeperReact:Math.max(.2,.42-.028*(lv-1)),     // pause before the goalie reacts to a shot
+    reach:Math.min(.95,.7+.032*(lv-1)),           // how far the goalie can stretch
+    keeperOut:lv>=5?Math.min(1.3,.25*(lv-4)):0,     // comes off the line to cut the angle
+    assist:lv<=2,                                  // levels 1–2: shots aimed roughly at goal stay on target
+    defenders:lv>=8?3:lv>=6?2:lv>=3?1:0,
+    defSpd:Math.min(5.3,3.3+.22*(lv-3)),
+    teammate:lv>=8
+  };
+}
+
+/* ---------- sound ---------- */
+let AC=null;
+function tone(f,d,type,vol,f2,delay){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();o.type=type||'triangle';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol||.15,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d+.05);}catch(e){}}
+const sfx={
+  kick(){tone(180,.09,'sine',.35,70);},
+  pass(){tone(260,.07,'sine',.22,120);},
+  goal(){[523,659,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.16,0,i*.09));},
+  save(){tone(330,.18,'square',.06,200);},
+  whistle(){tone(2300,.25,'sine',.08,2100);tone(2350,.2,'sine',.05,0,.28);},
+  win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.22,'triangle',.16,0,i*.12));},
+  lose(){[392,330,262,196].forEach((f,i)=>tone(f,.28,'triangle',.14,0,i*.16));}
+};
+
+/* ---------- state ---------- */
+let lv=1,best=+store.get('sc-best')||0,phase='ready',results=[],timer=0,clock=CLOCK,next=null;
+let me=null,mate=null,keeper=null,defs=[],ball=null,ctrl=null,facing={x:0,y:-1},stick=null,net=0;
+const goals=()=>results.filter(r=>r).length;
+
+function setupAttempt(){
+  const d=D(lv),sx=7+Math.random()*6;
+  me={x:sx,y:FL-4,vx:0,vy:0,num:9,team:'me'};
+  mate=d.teammate?{x:sx<10?15.5:4.5,y:FL-6,vx:0,vy:0,num:11,team:'me'}:null;
+  keeper={x:FW/2,y:GL+.7,vx:0};
+  defs=[];
+  for(let i=0;i<d.defenders;i++){
+    const x=d.defenders===1?FW/2:4+i*(12/(d.defenders-1));
+    defs.push({x:x+(Math.random()-.5)*1.5,y:11+Math.random()*2.5+(i===1?1.5:0),vx:0,vy:0,num:[4,5,3][i],react:.35+Math.random()*.3,bump:0});
+  }
+  ctrl=me;facing={x:0,y:-1};
+  ball={x:me.x,y:me.y-PR-BR,vx:0,vy:0,owner:me,kind:null,from:null};
+  clock=CLOCK;net=0;
+}
+function startLevel(){results=[];setupAttempt();phase='play';hideBanner();hud();controls();sfx.whistle();}
+function endAttempt(scored,title,text){
+  if(phase!=='play'&&phase!=='shot')return;
+  results.push(scored);phase='result';
+  if(scored)sfx.goal();else sfx.save();
+  banner(title,text,scored?'good':'bad');hud();controls();
+  const left=TRIES-results.length,g=goals();
+  timer=1.5;
+  next=()=>{
+    if(g>=NEED){levelWon();return;}
+    if(g+left<NEED){levelLost();return;}
+    hideBanner();setupAttempt();phase='play';controls();hud();
+  };
+}
+function levelWon(){
+  lv++;if(lv>best){best=lv;store.set('sc-best',best);}
+  phase='won';sfx.win();
+  const d=D(lv),extra=lv===3||lv===6?'A defender joins the other team.':lv===8?'Another defender joins, and you get a teammate to pass to.':'The goalie gets quicker.';
+  banner('LEVEL CLEARED!',goals()+' of '+results.length+'. Up next, level '+lv+'. '+extra,'good');controls();hud();
+}
+function levelLost(){
+  if(lv>best){best=lv;store.set('sc-best',best);}
+  phase='lost';sfx.lose();
+  banner('GAME OVER','You scored '+goals()+' of 5 on level '+lv+'. Best: level '+best+'.','bad');controls();hud();
+}
+
+/* ---------- HUD ---------- */
+function hud(){
+  const p=$('pips');p.innerHTML='';
+  for(let i=0;i<TRIES;i++){const e=document.createElement('i');if(i<results.length)e.className=results[i]?'g':'m';p.appendChild(e);}
+  $('goals').innerHTML=goals()+'<small>/'+NEED+'</small>';
+  $('lv').textContent=lv;
+  const d=D(lv);
+  $('sub').textContent=d.teammate?'2 on 4':d.defenders?'1 on '+(d.defenders+1):'1 on the keeper';
+}
+function controls(){
+  const b=$('btn'),p=$('pass'),d=D(lv);
+  p.hidden=!d.teammate||phase==='ready'||phase==='won'||phase==='lost';
+  if(phase==='ready'){b.disabled=false;b.textContent='START';}
+  else if(phase==='won'){b.disabled=false;b.textContent='NEXT LEVEL';}
+  else if(phase==='lost'){b.disabled=false;b.textContent='PLAY AGAIN';}
+  else{b.textContent='SHOOT';b.disabled=!(phase==='play'&&ball&&ball.owner===ctrl);p.disabled=b.disabled;}
+}
+function banner(t,p,cls){$('bh').textContent=t;$('bp').textContent=p||'';$('banner').className='banner '+(cls||'');$('banner').hidden=false;}
+function hideBanner(){$('banner').hidden=true;}
+
+/* ---------- actions ---------- */
+function act(){
+  if(!$('intro').hidden){$('intro').hidden=true;return;}
+  if(phase==='ready'||phase==='won')startLevel();
+  else if(phase==='lost'){lv=1;startLevel();}
+  else shoot();
+}
+function shoot(){
+  if(phase!=='play'||!ball||ball.owner!==ctrl)return;
+  let dx=facing.x,dy=facing.y;
+  if(D(lv).assist&&dy<-.15){
+    // easy levels: if you're roughly facing the goal, the shot stays between the posts
+    const t=(GL-ball.y)/dy,gx=ball.x+dx*t,cx=Math.max(PX0+.6,Math.min(PX1-.6,gx));
+    const vx=cx-ball.x,vy=GL-ball.y,m=Math.hypot(vx,vy);dx=vx/m;dy=vy/m;
+  }
+  const spd=17;ball.owner=null;ball.kind='shot';ball.from=ctrl;ball.vx=dx*spd;ball.vy=dy*spd;
+  keeper.wait=D(lv).keeperReact;phase='shot';sfx.kick();controls();
+}
+function pass(){
+  if(phase!=='play'||!mate||!ball||ball.owner!==ctrl)return;
+  const to=ctrl===me?mate:me,lead=.35;
+  const tx=to.x+to.vx*lead,ty=to.y+to.vy*lead,dx=tx-ball.x,dy=ty-ball.y,m=Math.hypot(dx,dy)||1,spd=Math.min(15,7+m*.9);
+  ball.owner=null;ball.kind='pass';ball.from=ctrl;ball.to=to;ball.vx=dx/m*spd;ball.vy=dy/m*spd;
+  sfx.pass();controls();
+}
+$('btn').addEventListener('pointerdown',e=>{e.preventDefault();act();});
+$('btn').addEventListener('click',e=>{if(e.detail===0)act();}); // keyboard
+$('pass').addEventListener('pointerdown',e=>{e.preventDefault();pass();});
+$('pass').addEventListener('click',e=>{if(e.detail===0)pass();});
+$('introGo').addEventListener('click',()=>{$('intro').hidden=true;tone(1,.01);});
+if(best){$('introBest').textContent='Your best: level '+best;$('introBest').hidden=false;}
+
+/* ---------- joystick ---------- */
+const cv=$('c'),ctx=cv.getContext('2d'),wrap=$('wrap');
+cv.addEventListener('pointerdown',e=>{
+  if(phase==='ready'||phase==='won'||phase==='lost'){act();return;}
+  if(stick)return;const r=cv.getBoundingClientRect();
+  stick={id:e.pointerId,x0:e.clientX-r.left,y0:e.clientY-r.top,dx:0,dy:0};
+  try{cv.setPointerCapture(e.pointerId)}catch(_){}
+});
+cv.addEventListener('pointermove',e=>{
+  if(!stick||e.pointerId!==stick.id)return;const r=cv.getBoundingClientRect();
+  stick.dx=e.clientX-r.left-stick.x0;stick.dy=e.clientY-r.top-stick.y0;
+});
+const endStick=e=>{if(stick&&e.pointerId===stick.id)stick=null;};
+cv.addEventListener('pointerup',endStick);cv.addEventListener('pointercancel',endStick);
+const keys={};
+addEventListener('keydown',e=>{
+  if(window.GD_PAUSED||!$('intro').hidden)return;
+  keys[e.key.toLowerCase()]=true;
+  if(e.key===' '){e.preventDefault();act();}
+  if(e.key.toLowerCase()==='p'||e.key.toLowerCase()==='e')pass();
+  if(e.key.startsWith('Arrow'))e.preventDefault();
+});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+function input(){
+  let x=0,y=0;
+  if(stick){const R=46,m=Math.hypot(stick.dx,stick.dy);if(m>6){const k=Math.min(1,m/R);x=stick.dx/m*k;y=stick.dy/m*k;}}
+  const kx=(keys.arrowright||keys.d?1:0)-(keys.arrowleft||keys.a?1:0),ky=(keys.arrowdown||keys.s?1:0)-(keys.arrowup||keys.w?1:0);
+  if(kx||ky){const m=Math.hypot(kx,ky);x=kx/m;y=ky/m;}
+  return {x,y};
+}
+
+/* ---------- update ---------- */
+const clampF=p=>{p.x=Math.max(PR,Math.min(FW-PR,p.x));p.y=Math.max(GL+PR,Math.min(FL-PR,p.y));};
+function moveTo(p,tx,ty,spd,dt){const dx=tx-p.x,dy=ty-p.y,m=Math.hypot(dx,dy);if(m<.05){p.vx=p.vy=0;return;}const s=Math.min(spd,m/dt);p.vx=dx/m*s;p.vy=dy/m*s;p.x+=p.vx*dt;p.y+=p.vy*dt;}
+function update(dt){
+  if(phase==='result'||phase==='won'||phase==='lost'){if(phase==='result'){timer-=dt;if(timer<=0){const f=next;next=null;f&&f();}}return;}
+  if(phase!=='play'&&phase!=='shot')return;
+  const d=D(lv);
+  // you
+  const inp=input(),SP=5.3;
+  if(phase==='play'){
+    ctrl.vx=inp.x*SP;ctrl.vy=inp.y*SP;ctrl.x+=ctrl.vx*dt;ctrl.y+=ctrl.vy*dt;clampF(ctrl);
+    if(Math.hypot(inp.x,inp.y)>.2){const m=Math.hypot(inp.x,inp.y);facing={x:inp.x/m,y:inp.y/m};}
+    clock-=dt;if(clock<=0){endAttempt(false,'TIME!','You need to get a shot off in 12 seconds.');return;}
+  }
+  // teammate runs into space on the other side, ahead of the ball
+  const other=mate?(ctrl===me?mate:me):null;
+  if(other&&!(ball.kind==='pass'&&ball.to===other&&false)){
+    const side=ctrl.x<FW/2?FW*.78:FW*.22,ty=Math.max(5.5,Math.min(FL-3,ctrl.y-3.5));
+    if(ball.kind==='pass'&&ball.to===other)moveTo(other,ball.x+ball.vx*.25,ball.y+ball.vy*.25,4.8,dt);
+    else moveTo(other,side,ty,4.4,dt);
+    clampF(other);
+  }
+  // ball
+  if(ball.owner){
+    const o=ball.owner;ball.x=o.x+facing.x*(PR+BR+.05);ball.y=o.y+facing.y*(PR+BR+.05);ball.vx=o.vx;ball.vy=o.vy;
+  }else{
+    const py=ball.y;
+    ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
+    const f=Math.exp(-(ball.kind==='shot'?.25:.9)*dt);ball.vx*=f;ball.vy*=f;
+    // pass received
+    if(ball.kind==='pass'){
+      const to=ball.to;
+      if(Math.hypot(to.x-ball.x,to.y-ball.y)<PR+BR+.35){
+        ball.owner=to;ball.kind=null;ctrl=to;
+        const m=Math.hypot(ball.vx,ball.vy)||1;facing=to.y>GL+3?{x:(FW/2-to.x)/Math.hypot(FW/2-to.x,GL-to.y),y:(GL-to.y)/Math.hypot(FW/2-to.x,GL-to.y)}:{x:ball.vx/m,y:ball.vy/m};
+        controls();
+      }else if(Math.hypot(ball.vx,ball.vy)<1.2){
+        // pass died: whoever is closer of you two picks it up
+        const a=[me,mate].sort((p,q)=>Math.hypot(p.x-ball.x,p.y-ball.y)-Math.hypot(q.x-ball.x,q.y-ball.y))[0];
+        moveTo(a,ball.x,ball.y,4.8,dt);ball.to=a;
+      }
+    }
+    // crossed the goal line
+    if(ball.y<GL&&py>=GL){
+      if(ball.x>PX0+BR*.5&&ball.x<PX1-BR*.5){net=1;endAttempt(true,'GOAL!',['Top corner!','Back of the net!','What a finish!','Nothing the keeper could do.'][Math.floor(Math.random()*4)]);}
+      else endAttempt(false,'WIDE!','Just missed the post.');
+      return;
+    }
+    if(ball.x<0||ball.x>FW||ball.y>FL){endAttempt(false,'OUT!',ball.kind==='pass'?'The pass went out of play.':'The ball went out of play.');return;}
+    if(ball.kind==='shot'&&Math.hypot(ball.vx,ball.vy)<2){endAttempt(false,'NO GOAL','The shot ran out of steam.');return;}
+  }
+  // goalie: slide across the line to where the ball is headed; step out to cut the angle on later levels
+  {
+    let tx;
+    if(keeper.wait>0){keeper.wait-=dt;tx=keeper.tx??FW/2;}
+    else if(!ball.owner&&ball.kind==='shot'&&ball.vy<0){const t=(keeper.y-ball.y)/ball.vy;tx=ball.x+ball.vx*Math.max(0,t);}
+    else{const ang=(ball.x-FW/2)/Math.max(2,ball.y-GL);tx=FW/2+ang*1.6;}
+    tx=Math.max(PX0+.3,Math.min(PX1-.3,tx));if(!(keeper.wait>0))keeper.tx=tx;
+    const close=Math.max(0,1-(ball.y-GL)/14),ty=GL+.7+d.keeperOut*close;
+    const dx=tx-keeper.x,s=Math.min(d.keeperSpd,Math.abs(dx)/dt);keeper.vx=Math.sign(dx)*s;keeper.x+=keeper.vx*dt;
+    keeper.y+=(ty-keeper.y)*Math.min(1,dt*3);
+    const bd=Math.hypot(ball.x-keeper.x,ball.y-keeper.y);
+    if(!ball.owner&&ball.kind==='shot'&&bd<d.reach+BR){ball.vx=0;ball.vy=0;endAttempt(false,'SAVED!',['Great save by the keeper.','The keeper got a hand to it.','Right at the goalie.'][Math.floor(Math.random()*3)]);return;}
+    if(ball.owner&&bd<PR+.75){endAttempt(false,'SMOTHERED!','The keeper dove on the ball.');return;}
+  }
+  // defenders: first one presses the ball, the rest cut off the path to goal
+  defs.forEach((df,i)=>{
+    df.react-=dt;
+    const carrier=ball.owner;
+    let tx,ty,spd=d.defSpd;
+    if(df.react>0){df.vx=df.vy=0;}
+    else{
+      const bx=ball.x,by=ball.y;
+      if(i===0||!carrier){tx=bx+ball.vx*.15;ty=by+ball.vy*.15;}
+      else if(i===1){const k=.35;tx=bx+(FW/2-bx)*k;ty=by+(GL-by)*k;spd*=.95;}
+      else{
+        // third defender marks your teammate if you have one, else covers the far side
+        const m=mate&&carrier===me?mate:mate&&carrier===mate?me:null;
+        if(m){tx=m.x+(FW/2-m.x)*.25;ty=m.y-1.4;}else{tx=bx+(FW/2-bx)*.6;ty=by+(GL-by)*.6;}
+        spd*=.9;
+      }
+      moveTo(df,tx,ty,spd,dt);clampF(df);
+    }
+    // tackles and blocks
+    const bd=Math.hypot(ball.x-df.x,ball.y-df.y);
+    if(carrier&&bd<PR+BR+.12&&df.react<=0){endAttempt(false,'TACKLED!','The defender took the ball.');}
+    else if(!carrier&&ball.kind==='shot'&&bd<PR+BR){endAttempt(false,'BLOCKED!','The defender got in the way of the shot.');}
+    else if(!carrier&&ball.kind==='pass'&&bd<PR+BR+.1){endAttempt(false,'INTERCEPTED!','A defender cut out the pass.');}
+  });
+  // players don't overlap
+  const bodies=[me,mate,...defs].filter(Boolean);
+  for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
+    const a=bodies[i],b=bodies[j],dx=b.x-a.x,dy=b.y-a.y,m=Math.hypot(dx,dy)||1e-4,o=PR*2-m;
+    if(o>0){a.x-=dx/m*o/2;a.y-=dy/m*o/2;b.x+=dx/m*o/2;b.y+=dy/m*o/2;}
+  }
+}
+
+/* ---------- drawing ---------- */
+let W=0,H=0,S=1,OX=0,OY=0;
+const X=x=>OX+x*S,Y=y=>OY+y*S;
+function resize(){
+  const r=wrap.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,3);W=r.width;H=r.height;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+  const top=-1.6;S=Math.min(W/FW,H/(FL-top));OX=(W-FW*S)/2;OY=(H-(FL-top)*S)/2-top*S;
+}
+addEventListener('resize',resize);
+function circle(x,y,r){ctx.beginPath();ctx.arc(x,y,Math.max(.5,r),0,Math.PI*2);}
+function drawPitch(){
+  ctx.fillStyle='#1d4a2a';ctx.fillRect(0,0,W,H);
+  for(let i=0;i<14;i++){if(i%2)continue;ctx.fillStyle='#22552f';ctx.fillRect(X(0),Y(GL+i*2),FW*S,2*S);}
+  ctx.strokeStyle='rgba(243,239,228,.8)';ctx.lineWidth=Math.max(1.5,S*.1);
+  ctx.strokeRect(X(0),Y(GL),FW*S,(FL-GL)*S+20);
+  ctx.strokeRect(X(3),Y(GL),14*S,7*S);         // penalty box
+  ctx.strokeRect(X(6.5),Y(GL),7*S,2.5*S);      // six-yard box
+  circle(X(FW/2),Y(GL+5.5),S*.12);ctx.fillStyle='rgba(243,239,228,.8)';ctx.fill();
+  ctx.beginPath();ctx.arc(X(FW/2),Y(GL+5.5),3.6*S,Math.PI*.2,Math.PI*.8);ctx.stroke();
+  ctx.beginPath();ctx.arc(X(FW/2),Y(FL+2),5*S,Math.PI*1.15,Math.PI*1.85);ctx.stroke(); // center circle edge
+  // goal + net
+  const nd=1.3;
+  ctx.fillStyle=net?'rgba(243,239,228,.32)':'rgba(243,239,228,.14)';ctx.fillRect(X(PX0),Y(GL-nd),(PX1-PX0)*S,nd*S);
+  ctx.strokeStyle='rgba(243,239,228,.35)';ctx.lineWidth=1;
+  for(let x=PX0;x<=PX1+.01;x+=.5){ctx.beginPath();ctx.moveTo(X(x),Y(GL-nd));ctx.lineTo(X(x),Y(GL));ctx.stroke();}
+  for(let y=GL-nd;y<=GL;y+=.43){ctx.beginPath();ctx.moveTo(X(PX0),Y(y));ctx.lineTo(X(PX1),Y(y));ctx.stroke();}
+  ctx.strokeStyle='#f3efe4';ctx.lineWidth=Math.max(3,S*.22);ctx.beginPath();ctx.moveTo(X(PX0),Y(GL));ctx.lineTo(X(PX0),Y(GL-nd));ctx.lineTo(X(PX1),Y(GL-nd));ctx.lineTo(X(PX1),Y(GL));ctx.stroke();
+}
+function drawPlayer(p,body,trim,num,active){
+  ctx.fillStyle='rgba(0,0,0,.3)';circle(X(p.x)+S*.12,Y(p.y)+S*.18,PR*S);ctx.fill();
+  if(active){ctx.strokeStyle='#f2b33d';ctx.lineWidth=Math.max(2,S*.12);circle(X(p.x),Y(p.y),PR*S+S*.28);ctx.stroke();}
+  ctx.fillStyle=body;circle(X(p.x),Y(p.y),PR*S);ctx.fill();
+  ctx.strokeStyle=trim;ctx.lineWidth=Math.max(1.5,S*.09);ctx.stroke();
+  if(num){ctx.fillStyle=trim;ctx.font='700 '+Math.round(PR*S*1.05)+'px "Barlow Condensed",Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(num,X(p.x),Y(p.y)+1);}
+}
+function drawKeeper(){
+  const k=keeper,w=1.15;
+  ctx.fillStyle='rgba(0,0,0,.3)';ctx.fillRect(X(k.x-w)+S*.1,Y(k.y-.3)+S*.15,2*w*S,.6*S);
+  ctx.fillStyle='#f2b33d';ctx.beginPath();ctx.roundRect?ctx.roundRect(X(k.x-w),Y(k.y-.32),2*w*S,.64*S,.3*S):ctx.rect(X(k.x-w),Y(k.y-.32),2*w*S,.64*S);ctx.fill();
+  ctx.fillStyle='#1b1405';circle(X(k.x),Y(k.y),.38*S);ctx.fill();
+  ctx.fillStyle='#f3efe4';circle(X(k.x-w),Y(k.y),.22*S);ctx.fill();circle(X(k.x+w),Y(k.y),.22*S);ctx.fill();
+}
+function drawBall(){
+  ctx.fillStyle='rgba(0,0,0,.3)';circle(X(ball.x)+S*.08,Y(ball.y)+S*.1,BR*S);ctx.fill();
+  ctx.fillStyle='#ffffff';circle(X(ball.x),Y(ball.y),BR*S);ctx.fill();
+  ctx.fillStyle='#14201a';circle(X(ball.x),Y(ball.y),BR*S*.38);ctx.fill();
+}
+function drawStick(){
+  if(!stick)return;const R=46,m=Math.hypot(stick.dx,stick.dy),k=m>R?R/m:1;
+  ctx.fillStyle='rgba(13,21,17,.35)';ctx.strokeStyle='rgba(243,239,228,.45)';ctx.lineWidth=2;
+  circle(stick.x0,stick.y0,R);ctx.fill();ctx.stroke();
+  ctx.fillStyle='rgba(242,179,61,.85)';circle(stick.x0+stick.dx*k,stick.y0+stick.dy*k,20);ctx.fill();
+}
+function draw(){
+  drawPitch();
+  if(!me)return;
+  // aim guide: faint line the way you're facing
+  if(phase==='play'&&ball.owner===ctrl){
+    ctx.strokeStyle='rgba(243,239,228,.25)';ctx.setLineDash([4,6]);ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(X(ball.x),Y(ball.y));ctx.lineTo(X(ball.x+facing.x*3.5),Y(ball.y+facing.y*3.5));ctx.stroke();ctx.setLineDash([]);
+  }
+  drawKeeper();
+  defs.forEach(df=>drawPlayer(df,'#1f4f8f','#cfe3ff',df.num,false));
+  if(mate)drawPlayer(mate,'#d6334a','#f3efe4',mate.num,ctrl===mate);
+  drawPlayer(me,'#d6334a','#f3efe4',me.num,ctrl===me&&!!mate);
+  drawBall();
+  if(phase==='play'){
+    ctx.font='700 15px "Barlow Condensed",Arial,sans-serif';ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillStyle=clock<4?'#ff8a98':'rgba(243,239,228,.85)';ctx.fillText('0:'+String(Math.ceil(Math.max(0,clock))).padStart(2,'0'),10,H-24);
+  }
+  drawStick();
+}
+
+let last=0;
+function frame(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;if(!window.GD_PAUSED)update(dt);if(phase==='play'||phase==='shot')controls();draw();requestAnimationFrame(frame);}
+if(/[?&]test\b/.test(location.search))window.__sc={
+  // shoot from (x,y) toward goal point gx and report what happened
+  shot(level,x,y,gx){lv=level;setupAttempt();defs=[];me.x=x;me.y=y;const dx=gx-x,dy=GL-y,m=Math.hypot(dx,dy);facing={x:dx/m,y:dy/m};
+    ball.x=x+facing.x*.9;ball.y=y+facing.y*.9;results=[];phase='play';
+    for(let i=0;i<60;i++)update(1/60); // keeper settles while you line up
+    shoot();for(let i=0;i<300&&phase==='shot';i++)update(1/60);const r=results[0];phase='ready';hideBanner();return r;}
+};
+resize();setupAttempt();hud();controls();requestAnimationFrame(frame);
+})();
+</script>
+<script src="../../menu.js"></script>
+</body>
+</html>
