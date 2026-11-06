@@ -426,7 +426,7 @@ function draw(){
 }
 
 let last=0;
-function frame(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(frame);}
+function frame(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;if(!window.GD_PAUSED)update(dt);draw();requestAnimationFrame(frame);}
 
 /* ---------- self-test hook: ?test adds window.__bp for tuning ---------- */
 if(/[?&]test\b/.test(location.search)){
@@ -440,5 +440,6 @@ if(/[?&]test\b/.test(location.search)){
 resize();board();controls();requestAnimationFrame(frame);
 })();
 </script>
+<script src="../../menu.js"></script>
 </body>
 </html>

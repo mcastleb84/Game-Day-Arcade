@@ -139,7 +139,7 @@ function build(lv,themeName){
 }
 
 /* ---------- state ---------- */
-let lv=+store.get('ws-level')||1,solved=+store.get('ws-solved')||0,P=null,theme='',sel=null,t0=0,done=false,tick=null;
+let pAt=0,lv=+store.get('ws-level')||1,solved=+store.get('ws-solved')||0,P=null,theme='',sel=null,t0=0,done=false,tick=null;
 const COLORS=['rgba(242,179,61,.42)','rgba(90,168,255,.42)','rgba(214,51,74,.42)','rgba(80,190,120,.42)','rgba(180,120,255,.42)','rgba(255,140,60,.42)'];
 
 function newPuzzle(){
@@ -237,7 +237,9 @@ cv.addEventListener('pointercancel',e=>{if(sel&&e.pointerId===sel.id){sel=null;d
 
 $('introGo').addEventListener('click',()=>{$('intro').hidden=true;tone(0.0001,.01);});
 newPuzzle();
+addEventListener('gd-pause',()=>{pAt=performance.now();});addEventListener('gd-resume',()=>{if(pAt)t0+=performance.now()-pAt;pAt=0;});
 })();
 </script>
+<script src="../../menu.js"></script>
 </body>
 </html>

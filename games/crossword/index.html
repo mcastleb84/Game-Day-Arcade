@@ -220,9 +220,9 @@ function makePuzzle(lv){
 
 /* ---------- state ---------- */
 let lv=+store.get('cw-level')||1,solved=+store.get('cw-solved')||0;
-let Z=null,user=[],bad=new Set(),rev=new Set(),cx=0,cy=0,dir='a',t0=0,done=false,cells=[];
+let pAt=0,started=false,Z=null,user=[],bad=new Set(),rev=new Set(),cx=0,cy=0,dir='a',t0=0,done=false,cells=[];
 const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
-setInterval(()=>{if(Z&&!done&&$('intro').hidden)$('time').textContent=fmt((performance.now()-t0)/1000);},500);
+setInterval(()=>{if(Z&&!done&&!window.GD_PAUSED&&$('intro').hidden)$('time').textContent=fmt((performance.now()-t0)/1000);},500);
 
 function newPuzzle(){
   Z=makePuzzle(lv);user=Z.sol.map(r=>r.map(()=>''));bad=new Set();rev=new Set();done=false;
@@ -338,7 +338,9 @@ function openClues(){
 $('clueTxt').addEventListener('click',openClues);
 $('clueTxt').addEventListener('keydown',e=>{if(e.key==='Enter')openClues();});
 $('cluesClose').addEventListener('click',()=>{$('clues').hidden=true;});
-$('introGo').addEventListener('click',()=>{$('intro').hidden=true;t0=performance.now();click();});
+$('introGo').addEventListener('click',()=>{$('intro').hidden=true;if(!started){started=true;t0=performance.now();}click();});
+addEventListener('gd-pause',()=>{pAt=performance.now();});addEventListener('gd-resume',()=>{if(pAt)t0+=performance.now()-pAt;pAt=0;});
+
 
 /* ---------- keyboard ---------- */
 const kb=$('kb');
@@ -349,7 +351,7 @@ const kb=$('kb');
   kb.appendChild(r);
 });
 addEventListener('keydown',e=>{
-  if(!Z||!$('intro').hidden||!$('clues').hidden||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(!Z||window.GD_PAUSED||!$('intro').hidden||!$('clues').hidden||e.metaKey||e.ctrlKey||e.altKey)return;
   if(/^[a-z]$/i.test(e.key)){type(e.key.toUpperCase());e.preventDefault();}
   else if(e.key==='Backspace'){back();e.preventDefault();}
   else if(e.key==='Tab'){stepWord(e.shiftKey?-1:1);e.preventDefault();}
@@ -371,5 +373,6 @@ if(/[?&]test\b/.test(location.search))window.__cw={makePuzzle,get Z(){return Z},
 newPuzzle();
 })();
 </script>
+<script src="../../menu.js"></script>
 </body>
 </html>

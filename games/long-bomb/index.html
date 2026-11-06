@@ -608,6 +608,7 @@ function drawCelebration(c){
 let last=performance.now();
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(window.GD_PAUSED){draw();requestAnimationFrame(frame);return;}
   if(G.phase==='live'||G.phase==='air'||G.phase==='run')update(dt*GAME_SPEED);
   if(G.phase==='celebrate'){G.celeb.t+=dt;if(G.celeb.t>=3.2)finishTD();}
   for(const p of Object.values(P)){const d=p.lx===undefined?0:Math.hypot(p.x-p.lx,p.y-p.ly);p.ph=(p.ph||0)+d*2.4;p.mv=dt>0&&d/dt>.8;p.lx=p.x;p.ly=p.y;}
@@ -631,5 +632,6 @@ requestAnimationFrame(frame);
 })();
 </script>
 
+<script src="../../menu.js"></script>
 </body>
 </html>

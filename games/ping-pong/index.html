@@ -320,9 +320,10 @@ function draw(dt){
 }
 
 let last=performance.now();
-function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);draw(dt);requestAnimationFrame(frame);}
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!window.GD_PAUSED)step(dt);draw(dt);requestAnimationFrame(frame);}
 resize();board();controls();requestAnimationFrame(frame);
 })();
 </script>
+<script src="../../menu.js"></script>
 </body>
 </html>
