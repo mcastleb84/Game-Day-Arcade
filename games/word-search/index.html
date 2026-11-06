@@ -70,7 +70,7 @@ button:focus-visible{outline:3px solid #5aa8ff;outline-offset:2px}
     <div class="banner" id="banner" hidden><h2 id="bh"></h2><p id="bp"></p></div>
     <div class="intro" id="intro" role="dialog" aria-labelledby="introH">
       <h2 id="introH">How to Play</h2>
-      <p class="goal">Find every sports word hidden in the grid. Each puzzle you finish moves you up a level.</p>
+      <p class="goal">Find every word hidden in the grid. Each puzzle has a random theme, like animals, food, space or sports. Finish one to move up a level.</p>
       <ul>
         <li><b>Find</b><span>Drag your finger from the first letter of a word to the last, then let go.</span></li>
         <li><b>Directions</b><span>Words run across and down at first. Later levels add diagonals and backwards words.</span></li>
@@ -90,13 +90,26 @@ const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 
 const THEMES={
+  'Animals':["ELEPHANT", "GIRAFFE", "TIGER", "ZEBRA", "KANGAROO", "PENGUIN", "DOLPHIN", "OCTOPUS", "RABBIT", "SQUIRREL", "MONKEY", "CAMEL", "LEOPARD", "GORILLA", "TURTLE", "PARROT", "HAMSTER", "BEAVER", "OTTER", "MOOSE"],
+  'Food':["PIZZA", "PANCAKE", "BURRITO", "SPAGHETTI", "SANDWICH", "PRETZEL", "WAFFLE", "NOODLES", "TACO", "CHEESE", "BAGEL", "MUFFIN", "OMELET", "SALAD", "POPCORN", "CUPCAKE", "SUSHI", "PICKLE", "LASAGNA", "BROWNIE"],
+  'Space':["PLANET", "GALAXY", "COMET", "ASTEROID", "ROCKET", "ORBIT", "METEOR", "NEBULA", "SATURN", "JUPITER", "MARS", "VENUS", "MERCURY", "NEPTUNE", "URANUS", "ECLIPSE", "TELESCOPE", "ASTRONAUT", "GRAVITY", "MOON"],
+  'Weather':["THUNDER", "LIGHTNING", "RAINBOW", "TORNADO", "HURRICANE", "BLIZZARD", "DRIZZLE", "SUNSHINE", "CLOUDY", "FOG", "HAIL", "SLEET", "BREEZE", "HUMIDITY", "FORECAST", "DROUGHT", "MONSOON", "FROST", "STORM", "WINDY"],
+  'Music':["GUITAR", "PIANO", "DRUMS", "VIOLIN", "TRUMPET", "SAXOPHONE", "FLUTE", "CELLO", "BANJO", "HARMONICA", "MELODY", "RHYTHM", "CHORUS", "LYRICS", "TEMPO", "CONCERT", "ORCHESTRA", "BASS", "HARP", "TUBA"],
+  'Ocean':["WHALE", "SHARK", "CORAL", "SEAWEED", "JELLYFISH", "STARFISH", "LOBSTER", "CRAB", "OYSTER", "SEAHORSE", "TIDE", "WAVE", "REEF", "ISLAND", "ANCHOR", "LIGHTHOUSE", "SAILBOAT", "SHELL", "CURRENT", "SQUID"],
+  'Kitchen':["SPATULA", "WHISK", "BLENDER", "TOASTER", "KETTLE", "SKILLET", "LADLE", "COLANDER", "OVEN", "FREEZER", "NAPKIN", "PLATTER", "TEASPOON", "GRATER", "APRON", "MICROWAVE", "DISHWASHER", "MUG", "TONGS", "FORK"],
+  'Jobs':["DOCTOR", "TEACHER", "PILOT", "CHEF", "NURSE", "FARMER", "BARBER", "PLUMBER", "LAWYER", "DENTIST", "ENGINEER", "MECHANIC", "CARPENTER", "SCIENTIST", "ARTIST", "BAKER", "FIREFIGHTER", "LIBRARIAN", "CASHIER", "JUDGE"],
+  'Colors':["CRIMSON", "TURQUOISE", "LAVENDER", "MAGENTA", "ORANGE", "YELLOW", "PURPLE", "MAROON", "BEIGE", "SCARLET", "INDIGO", "VIOLET", "EMERALD", "SILVER", "GOLD", "TEAL", "NAVY", "OLIVE", "IVORY", "PEACH"],
+  'Countries':["CANADA", "MEXICO", "BRAZIL", "FRANCE", "JAPAN", "EGYPT", "KENYA", "CHINA", "INDIA", "ITALY", "SPAIN", "GERMANY", "AUSTRALIA", "PERU", "CHILE", "NORWAY", "IRELAND", "GREECE", "VIETNAM", "ICELAND"],
+  'Nature':["MOUNTAIN", "RIVER", "FOREST", "VALLEY", "CANYON", "WATERFALL", "MEADOW", "DESERT", "VOLCANO", "GLACIER", "CAVE", "LAKE", "PRAIRIE", "SWAMP", "JUNGLE", "CLIFF", "PEBBLE", "OAK", "MAPLE", "FERN"],
+  'Vehicles':["AIRPLANE", "BICYCLE", "SUBWAY", "TRAIN", "TRUCK", "HELICOPTER", "SCOOTER", "FERRY", "TAXI", "BUS", "MOTORCYCLE", "TRACTOR", "CANOE", "YACHT", "VAN", "TROLLEY", "SKATEBOARD", "KAYAK", "BLIMP", "SUBMARINE"],
+  'At Home':["PILLOW", "BLANKET", "CURTAIN", "LAMP", "SOFA", "CARPET", "MIRROR", "CLOSET", "DRAWER", "BOOKSHELF", "CANDLE", "DOORBELL", "STAIRS", "ATTIC", "GARAGE", "CHIMNEY", "WINDOW", "LADDER", "CLOCK", "BATHTUB"],
+  'Body':["ELBOW", "KNEE", "SHOULDER", "ANKLE", "WRIST", "THUMB", "EYEBROW", "NOSTRIL", "TONGUE", "TOOTH", "HEART", "BRAIN", "LUNGS", "SKELETON", "MUSCLE", "STOMACH", "FOREHEAD", "CHIN", "SPINE", "KNUCKLE"],
+  'School':["PENCIL", "ERASER", "NOTEBOOK", "BACKPACK", "TEACHER", "RECESS", "HOMEWORK", "LIBRARY", "SCIENCE", "HISTORY", "MATH", "SPELLING", "CRAYON", "RULER", "GLOBE", "CALENDAR", "LOCKER", "QUIZ", "LUNCHBOX", "CHALK"],
+  'Garden':["TULIP", "ROSE", "DAISY", "SUNFLOWER", "LILY", "ORCHID", "VIOLET", "SHOVEL", "RAKE", "HOSE", "SEEDS", "SOIL", "WORM", "BUTTERFLY", "BEE", "LADYBUG", "WEED", "VINE", "TOMATO", "PUMPKIN"],
   Football:['TOUCHDOWN','FUMBLE','PUNT','KICKOFF','BLITZ','HUDDLE','SAFETY','FIELDGOAL','ENDZONE','SACK','SNAP','TACKLE','RECEIVER','LINEMAN','HELMET','PYLON','GRIDIRON','DOWNS','PASS','REFEREE'],
   Basketball:['DUNK','REBOUND','LAYUP','DRIBBLE','ASSIST','JUMPSHOT','FREETHROW','BACKBOARD','HOOP','CENTER','GUARD','FORWARD','BLOCK','STEAL','COURT','BUZZER','TIPOFF','ALLEYOOP','TRAVEL','NET'],
   Baseball:['HOMERUN','PITCHER','CATCHER','DUGOUT','BULLPEN','STRIKE','INNING','SHORTSTOP','BUNT','DIAMOND','GLOVE','SLIDER','CURVEBALL','OUTFIELD','MOUND','BATTER','DOUBLE','TRIPLE','WALK','UMPIRE'],
   Soccer:['GOAL','KEEPER','PENALTY','CORNER','HEADER','OFFSIDE','STRIKER','DEFENDER','MIDFIELD','VOLLEY','FREEKICK','PITCH','CLEATS','REFEREE','DRIBBLE','CROSS','WALL','NET','SHINGUARD','REDCARD'],
-  Hockey:['PUCK','STICK','GOALIE','SLAPSHOT','ICING','POWERPLAY','FACEOFF','RINK','BLUELINE','CHECK','HATTRICK','PENALTY','ZAMBONI','SKATES','ASSIST','CREASE','BOARDS','SHUTOUT','WRISTER'],
-  Golf:['BIRDIE','EAGLE','BOGEY','PAR','PUTTER','DRIVER','IRON','WEDGE','FAIRWAY','GREEN','BUNKER','CADDIE','TEE','HOLEINONE','ROUGH','CLUB','SWING','MULLIGAN','DIVOT'],
-  Tennis:['ACE','SERVE','VOLLEY','LOVE','DEUCE','RACKET','BASELINE','LOB','SMASH','FOREHAND','BACKHAND','NET','MATCH','ADVANTAGE','TIEBREAK','COURT','FAULT','RALLY']
 };
 const ALL8=[[1,0],[0,1],[1,1],[1,-1],[-1,0],[0,-1],[-1,-1],[-1,1]];
 // Level settings: grid size, word count, allowed directions.
