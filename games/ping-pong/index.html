@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Ping Pong</title>
+<meta name="theme-color" content="#0d1511">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Graduate&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: one-screen arena — back link, scoreboard (You | level | CPU, with 7 pips each), the table from above, then one action button. Same night look as the arcade. */
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --ink:#0d1511;
+  --panel:#16221b;
+  --line:#2a3a30;
+  --chalk:#f3efe4;
+  --muted:#9fb1a5;
+  --gold:#f2b33d;
+  --me:#d6334a;      /* your paddle: red rubber */
+  --cpu:#5aa8ff;     /* CPU accent */
+  --display:"Graduate","Rockwell","Georgia",serif;
+  --body:"Barlow Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--ink);height:100%}
+body{height:100%;margin:0;background:var(--ink);color:var(--chalk);font-family:var(--body);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+[hidden]{display:none!important}
+.app{height:100%;max-width:560px;margin:0 auto;display:grid;grid-template-rows:auto auto 1fr auto;gap:10px;
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.back{justify-self:start;color:var(--muted);font-weight:600;font-size:16px;letter-spacing:.04em;text-decoration:none;padding:2px 0}
+.back:hover,.back:focus-visible{color:var(--gold)}
+.board{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.side{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 6px}
+.side .who{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.side.me .who{color:var(--me)} .side.cpu .who{color:var(--cpu)}
+.score{font-family:var(--display);font-size:44px;line-height:1;font-variant-numeric:tabular-nums}
+.pips{display:flex;gap:4px}
+.pips i{width:8px;height:8px;border-radius:50%;border:1px solid var(--line);background:transparent}
+.side.me .pips i.on{background:var(--me);border-color:var(--me)}
+.side.cpu .pips i.on{background:var(--cpu);border-color:var(--cpu)}
+.mid{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 14px;border-left:1px solid var(--line);border-right:1px solid var(--line);min-width:7.5em}
+.mid .lbl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mid .lv{font-family:var(--display);font-size:26px;color:var(--gold);line-height:1.05}
+.mid .sub{font-size:14px;color:var(--muted);font-weight:600;white-space:nowrap}
+.tablewrap{position:relative;min-height:0;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:#101a15}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:ew-resize}
+.banner{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(13,21,17,.94);border:1px solid var(--line);
+  border-radius:8px;padding:16px 18px;text-align:center;width:min(86%,340px);pointer-events:none}
+.banner h2{font-family:var(--display);font-weight:400;font-size:26px;margin:0 0 6px;letter-spacing:.02em;text-wrap:balance}
+.banner p{margin:0;font-size:17px;color:var(--muted);font-weight:500;line-height:1.3}
+.banner.good h2{color:var(--gold)} .banner.bad h2{color:var(--me)}
+.intro{position:absolute;inset:0;background:rgba(13,21,17,.96);overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;z-index:5}
+.intro h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0;color:var(--gold)}
+.intro .goal{margin:0;font-size:16px;line-height:1.3;font-weight:500}
+.intro ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.intro li{display:grid;grid-template-columns:5.2em 1fr;gap:8px;font-size:15px;line-height:1.25;color:var(--muted);font-weight:500}
+.intro li b{font-weight:700;color:var(--chalk);letter-spacing:.06em;text-transform:uppercase;font-size:13px;padding-top:1px}
+.intro .best{margin:0;font-size:15px;color:var(--muted)}
+.intro button{margin-top:auto}
+.controls{display:flex;flex-direction:column;gap:6px}
+button{font-family:var(--display);font-size:20px;letter-spacing:.05em;padding:14px 10px;border-radius:6px;border:0;background:var(--gold);color:#1b1405;cursor:pointer;touch-action:manipulation}
+button:disabled{background:var(--panel);color:var(--muted);border:1px solid var(--line);cursor:default;font-size:16px}
+button:focus-visible{outline:3px solid var(--cpu);outline-offset:2px}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.hint{font-size:14px;color:var(--muted);font-weight:500;line-height:1.2;min-width:0}
+button.mini{font-family:var(--body);font-size:14px;font-weight:600;letter-spacing:.04em;padding:5px 9px;background:transparent;color:var(--muted);border:1px solid var(--line);white-space:nowrap;flex:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <a class="back" href="../../">‹ All games</a>
+  <div class="board" aria-live="polite">
+    <div class="side me"><span class="who">You</span><span class="score" id="ps">0</span><span class="pips" id="pp"></span></div>
+    <div class="mid"><span class="lbl">Level</span><span class="lv" id="lv">1</span><span class="sub" id="sub">First to 7</span></div>
+    <div class="side cpu"><span class="who">CPU</span><span class="score" id="cs">0</span><span class="pips" id="cp"></span></div>
+  </div>
+  <div class="tablewrap" id="wrap">
+    <canvas id="c" aria-label="Ping pong table seen from above. Drag left and right to move your paddle."></canvas>
+    <div class="banner" id="banner" hidden><h2 id="bh"></h2><p id="bp"></p></div>
+    <div class="intro" id="intro" role="dialog" aria-labelledby="introH">
+      <h2 id="introH">How to Play</h2>
+      <p class="goal">First to 7 points wins the game. Beat the CPU to move up a level. Lose a game and your run is over.</p>
+      <ul>
+        <li><b>Move</b><span>Drag your finger left and right on the table to move your red paddle at the bottom.</span></li>
+        <li><b>Serve</b><span>Serves switch every 2 points. On your serve, tap the table or the SERVE button.</span></li>
+        <li><b>Aim</b><span>Hit the ball with the edge of your paddle for a sharper angle. The middle sends it straight.</span></li>
+        <li><b>Levels</b><span>Each level the CPU gets quicker, the ball gets faster and your paddle gets a little smaller.</span></li>
+      </ul>
+      <p class="best" id="introBest" hidden></p>
+      <button id="introGo" type="button">LET'S PLAY</button>
+    </div>
+  </div>
+  <div class="controls">
+    <button id="btn" type="button">START GAME</button>
+    <div class="row"><span class="hint" id="hint"></span><button class="mini" id="snd" type="button">Sound on</button></div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TW=9,TH=16,R=.2,WIN=7;          // table units: 9 wide, 16 long (real tables are 1.525 m x 2.74 m)
+const YP=TH-1.1,YC=1.1;                // paddle lines: you at the bottom, CPU at the top
+
+/* ---------- sound ---------- */
+let AC=null,muted=store.get('pp-mute')==='1';
+function ac(){if(muted)return null;if(!AC){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;try{AC=new A()}catch(e){return null}}if(AC.state==='suspended')AC.resume();return AC;}
+function tone(f,d,type,vol,f2,delay){const a=ac();if(!a)return;const t=a.currentTime+(delay||0),o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.05);}
+const sfx={
+  hit(me){tone(me?760:620,.06,'triangle',.35,me?520:420);},
+  wall(){tone(1100,.03,'sine',.12);},
+  point(me){if(me)[660,880].forEach((f,i)=>tone(f,.12,'triangle',.18,0,i*.09));else tone(300,.25,'sawtooth',.06,180);},
+  win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.22,'triangle',.16,0,i*.12));},
+  lose(){[392,330,262,196].forEach((f,i)=>tone(f,.28,'triangle',.14,0,i*.16));}
+};
+const sndLabel=()=>{$('snd').textContent=muted?'Sound off':'Sound on';};
+$('snd').addEventListener('click',()=>{muted=!muted;store.set('pp-mute',muted?'1':'0');if(muted&&AC)AC.suspend();sndLabel();});
+sndLabel();
+
+/* ---------- game state ---------- */
+let lv=1,wins=0,ps=0,cs=0,phase='ready',timer=0,flash=null,best=+store.get('pp-best')||0;
+const me={x:TW/2,tx:TW/2,v:0,w:2},cpu={x:TW/2,v:0,w:2,aim:0};
+const ball={x:TW/2,y:TH/2,vx:0,vy:0,spd:0},trail=[];
+// Difficulty grows every level.
+const P=()=>({
+  speed:7.5+.85*(lv-1),                       // serve speed (table units per second)
+  cap:13+1.1*(lv-1),                          // fastest the rally can get
+  meW:Math.max(1.35,2.2-.08*(lv-1)),          // your paddle shrinks a little
+  cpuW:Math.min(2.4,1.7+.06*(lv-1)),
+  cpuSp:4.2+1.05*(lv-1),                      // how fast the CPU paddle moves
+  err:Math.max(.1,1.5-.13*(lv-1)),            // how far off the CPU aims (in paddle half-widths); above 1 it can miss
+  react:Math.min(.95,.48+.05*(lv-1))          // how early the CPU starts reading the ball
+});
+const server=()=>Math.floor((ps+cs)/2)%2===0?'me':'cpu';   // serve switches every 2 points
+
+/* ---------- scoreboard ---------- */
+function pips(el,n){el.innerHTML='';for(let i=0;i<WIN;i++){const d=document.createElement('i');if(i<n)d.className='on';el.appendChild(d);}}
+function board(){
+  $('ps').textContent=ps;$('cs').textContent=cs;pips($('pp'),ps);pips($('cp'),cs);
+  $('lv').textContent=lv;$('sub').textContent=wins?('Games won '+wins):'First to 7';
+}
+function controls(){
+  const b=$('btn'),h=$('hint');
+  const m={
+    ready:['START GAME',false,'Level '+lv+'. First to 7 points.'],
+    serve:server()==='me'?['SERVE',false,'Your serve. Tap the table or SERVE.']:['CPU SERVING',true,'Get ready to return it.'],
+    play:['RALLY',true,'Drag left and right to move your paddle.'],
+    point:['POINT',true,''],
+    won:['NEXT LEVEL',false,'Level '+(lv)+' is ready.'],
+    lost:['PLAY AGAIN',false,'Best: level '+best+'.']
+  }[phase];
+  b.textContent=m[0];b.disabled=m[1];h.textContent=m[2];
+}
+function banner(t,p,tone){$('bh').textContent=t;$('bp').textContent=p;$('banner').className='banner '+(tone||'');$('banner').hidden=false;}
+const hideBanner=()=>{$('banner').hidden=true;};
+
+/* ---------- flow ---------- */
+function startGame(){
+  ps=cs=0;const p=P();me.w=p.meW;cpu.w=p.cpuW;cpu.x=TW/2;hideBanner();board();toServe();
+}
+function toServe(){
+  phase='serve';timer=0;ball.vx=ball.vy=0;trail.length=0;
+  ball.x=server()==='me'?me.x:cpu.x;ball.y=server()==='me'?YP-.55:YC+.55;
+  controls();
+}
+function serve(){
+  if(phase!=='serve')return;ac();
+  const p=P(),up=server()==='me',a=(Math.random()*2-1)*.35+(up?me.v*.02:0);
+  ball.spd=p.speed;ball.vx=ball.spd*Math.sin(a);ball.vy=(up?-1:1)*ball.spd*Math.cos(a);
+  cpu.aim=(Math.random()*2-1)*p.err;
+  sfx.hit(up);phase='play';controls();
+}
+function point(toMe){
+  if(toMe)ps++;else cs++;
+  sfx.point(toMe);flash={text:toMe?'+1 YOU':'+1 CPU',me:toMe,t:0};
+  board();phase='point';timer=0;controls();
+}
+function afterPoint(){
+  if(ps>=WIN){
+    wins++;lv++;if(lv>best){best=lv;store.set('pp-best',best);}
+    sfx.win();phase='won';board();
+    banner('YOU WIN '+ps+'–'+cs+'!','On to level '+lv+'. The CPU gets quicker, the ball gets faster and your paddle gets smaller.','good');
+  }else if(cs>=WIN){
+    sfx.lose();phase='lost';
+    banner('CPU WINS '+cs+'–'+ps,'You reached level '+lv+' and won '+wins+(wins===1?' game.':' games.')+' Best: level '+Math.max(best,lv)+'.','bad');
+    if(lv>best){best=lv;store.set('pp-best',best);}
+  }else{toServe();return;}
+  controls();
+}
+function act(){
+  if(!$('intro').hidden){closeIntro();return;}
+  if(phase==='ready'||phase==='won')startGame();
+  else if(phase==='lost'){lv=1;wins=0;startGame();}
+  else if(phase==='serve'&&server()==='me')serve();
+}
+$('btn').addEventListener('click',act);
+function closeIntro(){$('intro').hidden=true;ac();$('btn').focus();}
+$('introGo').addEventListener('click',closeIntro);
+if(best){$('introBest').textContent='Your best: level '+best;$('introBest').hidden=false;}
+
+/* ---------- input ---------- */
+const cv=$('c'),ctx=cv.getContext('2d'),wrap=$('wrap');
+let W=0,H=0,s=20,ox=0,oy=0;
+function resize(){const r=wrap.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,3);W=r.width;H=r.height;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+  s=Math.min(W/(TW+1.2),H/(TH+1.6));ox=(W-TW*s)/2;oy=(H-TH*s)/2;}
+addEventListener('resize',resize);
+const toX=px=>(px-ox)/s;
+let dragging=false;
+cv.addEventListener('pointerdown',e=>{
+  dragging=true;try{cv.setPointerCapture(e.pointerId)}catch(_){}
+  me.tx=toX(e.clientX-cv.getBoundingClientRect().left);
+  if(phase==='serve'&&server()==='me')serve();
+  else if(phase==='ready'||phase==='won'||phase==='lost')act();
+});
+cv.addEventListener('pointermove',e=>{if(dragging||e.pointerType==='mouse')me.tx=toX(e.clientX-cv.getBoundingClientRect().left);});
+const stopDrag=()=>{dragging=false;};cv.addEventListener('pointerup',stopDrag);cv.addEventListener('pointercancel',stopDrag);
+const keys={};
+addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();act();return;}keys[e.code]=true;if(e.code.startsWith('Arrow'))e.preventDefault();});
+addEventListener('keyup',e=>{keys[e.code]=false;});
+
+/* ---------- physics ---------- */
+function predictX(){ // where the ball will cross the CPU's line, with side-rail bounces
+  const t=(ball.y-YC)/(-ball.vy);let x=ball.x+ball.vx*t;const L=R,Rr=TW-R,span=Rr-L;
+  let u=(x-L)%(2*span);if(u<0)u+=2*span;return L+(u>span?2*span-u:u);
+}
+function hitPaddle(pd,isMe){
+  const p=P(),off=Math.max(-1,Math.min(1,(ball.x-pd.x)/(pd.w/2+R))),ang=off*1.0+pd.v*.015;
+  ball.spd=Math.min(p.cap,ball.spd*1.05);
+  ball.vx=ball.spd*Math.sin(ang);ball.vy=(isMe?-1:1)*ball.spd*Math.cos(Math.max(-1.1,Math.min(1.1,ang)));
+  if(isMe)cpu.aim=(Math.random()*2-1)*p.err;
+  sfx.hit(isMe);
+}
+function step(dt){
+  const p=P();
+  // your paddle follows your finger (or arrow keys)
+  if(keys.ArrowLeft||keys.KeyA)me.tx-=12*dt;if(keys.ArrowRight||keys.KeyD)me.tx+=12*dt;
+  me.tx=Math.max(me.w/2-.3,Math.min(TW-me.w/2+.3,me.tx));
+  const ox0=me.x;me.x+=Math.max(-30*dt,Math.min(30*dt,me.tx-me.x));me.v=(me.x-ox0)/dt;
+  // CPU paddle: reads the ball once it is close enough, aims a little off
+  const cx0=cpu.x;let target=TW/2;
+  if(phase==='play'&&ball.vy<0&&ball.y<TH*p.react)target=predictX()+cpu.aim*(cpu.w/2);
+  else if(phase==='serve'&&server()==='cpu')target=cpu.x;
+  const sp=(phase==='play'&&ball.vy<0)?p.cpuSp:p.cpuSp*.5;
+  cpu.x+=Math.max(-sp*dt,Math.min(sp*dt,target-cpu.x));cpu.x=Math.max(cpu.w/2-.3,Math.min(TW-cpu.w/2+.3,cpu.x));cpu.v=(cpu.x-cx0)/dt;
+
+  if(phase==='serve'){
+    if(server()==='me'){ball.x=me.x;ball.y=YP-.55;}
+    else{ball.x=cpu.x;ball.y=YC+.55;timer+=dt;if(timer>1)serve();}
+    return;
+  }
+  if(phase==='point'){timer+=dt;if(timer>1)afterPoint();return;}
+  if(phase!=='play')return;
+  // ball, in small sub-steps so fast shots never skip through a paddle
+  const n=Math.ceil(dt/(1/240));
+  for(let i=0;i<n;i++){
+    const h=dt/n;ball.x+=ball.vx*h;ball.y+=ball.vy*h;
+    if(ball.x<R){ball.x=R;ball.vx=Math.abs(ball.vx);sfx.wall();}
+    if(ball.x>TW-R){ball.x=TW-R;ball.vx=-Math.abs(ball.vx);sfx.wall();}
+    if(ball.vy>0&&ball.y+R>=YP-.12&&ball.y<YP+.25&&Math.abs(ball.x-me.x)<=me.w/2+R){ball.y=YP-.12-R;hitPaddle(me,true);}
+    if(ball.vy<0&&ball.y-R<=YC+.12&&ball.y>YC-.25&&Math.abs(ball.x-cpu.x)<=cpu.w/2+R){ball.y=YC+.12+R;hitPaddle(cpu,false);}
+    if(ball.y>TH+.6){point(false);break;}
+    if(ball.y<-.6){point(true);break;}
+  }
+  trail.push({x:ball.x,y:ball.y});if(trail.length>8)trail.shift();
+}
+
+/* ---------- drawing ---------- */
+const X=x=>ox+x*s,Y=y=>oy+y*s;
+function rrect(x,y,w,h,r){ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,r):ctx.rect(x,y,w,h);}
+function drawTable(){
+  ctx.fillStyle='#101a15';ctx.fillRect(0,0,W,H);
+  // floor boards
+  ctx.strokeStyle='rgba(255,255,255,.03)';ctx.lineWidth=1;for(let x=0;x<W;x+=28){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  // table shadow + top
+  ctx.fillStyle='rgba(0,0,0,.45)';rrect(X(0)+6,Y(0)+8,TW*s,TH*s,s*.15);ctx.fill();
+  ctx.fillStyle='#1d5d9b';rrect(X(0),Y(0),TW*s,TH*s,s*.12);ctx.fill();
+  ctx.fillStyle='#1a5590';ctx.fillRect(X(0),Y(TH/2),TW*s,TH*s/2);
+  // white edge lines and center line (for doubles)
+  ctx.strokeStyle='#f3efe4';ctx.lineWidth=Math.max(2,s*.09);
+  ctx.strokeRect(X(0)+ctx.lineWidth/2,Y(0)+ctx.lineWidth/2,TW*s-ctx.lineWidth,TH*s-ctx.lineWidth);
+  ctx.lineWidth=Math.max(1,s*.04);ctx.globalAlpha=.7;ctx.beginPath();ctx.moveTo(X(TW/2),Y(0));ctx.lineTo(X(TW/2),Y(TH));ctx.stroke();ctx.globalAlpha=1;
+  // net with posts
+  ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillRect(X(-.35),Y(TH/2)+2,(TW+.7)*s,s*.16);
+  ctx.fillStyle='#22262a';ctx.fillRect(X(-.35),Y(TH/2)-s*.09,(TW+.7)*s,s*.18);
+  ctx.fillStyle='#f3efe4';ctx.fillRect(X(-.35),Y(TH/2)-s*.09,(TW+.7)*s,s*.05);
+  ctx.fillStyle='#3a4046';ctx.fillRect(X(-.45),Y(TH/2)-s*.2,s*.18,s*.4);ctx.fillRect(X(TW+.27),Y(TH/2)-s*.2,s*.18,s*.4);
+}
+function drawPaddle(pd,y,isMe){
+  const px=X(pd.x),py=Y(y),w=pd.w*s,h=s*.42,dir=isMe?1:-1;
+  // wooden handle sticks out away from the net
+  ctx.fillStyle='rgba(0,0,0,.35)';rrect(px-s*.16+4,py+dir*h*.35+4,s*.32,dir*s*.75,s*.08);ctx.fill();
+  ctx.fillStyle='#b98a52';rrect(px-s*.15,py+(dir>0?h*.3:-h*.3-s*.75),s*.3,s*.75,s*.08);ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(px+4,py+5,w/2,h/2,0,0,7);ctx.fill();
+  ctx.fillStyle=isMe?'#d6334a':'#20262c';ctx.beginPath();ctx.ellipse(px,py,w/2,h/2,0,0,7);ctx.fill();
+  ctx.strokeStyle=isMe?'#7e1424':'#5aa8ff';ctx.lineWidth=Math.max(2,s*.07);ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.12)';ctx.beginPath();ctx.ellipse(px-w*.12,py-h*.12,w*.3,h*.18,0,0,7);ctx.fill();
+}
+function drawBall(){
+  if(!reduce)trail.forEach((t,i)=>{ctx.fillStyle=`rgba(246,241,230,${(i+1)/trail.length*.18})`;ctx.beginPath();ctx.arc(X(t.x),Y(t.y),R*s*.8,0,7);ctx.fill();});
+  ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.arc(X(ball.x)+s*.15,Y(ball.y)+s*.2,R*s,0,7);ctx.fill();
+  const g=ctx.createRadialGradient(X(ball.x)-R*s*.35,Y(ball.y)-R*s*.35,1,X(ball.x),Y(ball.y),R*s);g.addColorStop(0,'#ffffff');g.addColorStop(1,'#f0b860');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(X(ball.x),Y(ball.y),R*s,0,7);ctx.fill();
+}
+function draw(dt){
+  drawTable();
+  ctx.font=`600 ${Math.max(12,s*.55)}px "Barlow Condensed", Arial, sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='rgba(243,239,228,.35)';ctx.fillText('CPU',X(TW/2),Y(TH*.27));ctx.fillText('YOU',X(TW/2),Y(TH*.73));
+  drawPaddle(cpu,YC,false);drawPaddle(me,YP,true);
+  if(phase!=='ready'&&phase!=='won'&&phase!=='lost'&&!(phase==='point'))drawBall();
+  if(flash){flash.t+=dt;const a=Math.max(0,1-flash.t/1.1);
+    if(a>0){ctx.globalAlpha=a;ctx.font=`${Math.max(22,s*1.3)}px Graduate, Georgia, serif`;ctx.lineWidth=4;ctx.strokeStyle='rgba(13,21,17,.85)';ctx.fillStyle=flash.me?'#f2b33d':'#5aa8ff';
+      const fy=Y(TH/2)-(reduce?0:flash.t*s*1.2)-s*1.2;ctx.strokeText(flash.text,X(TW/2),fy);ctx.fillText(flash.text,X(TW/2),fy);ctx.globalAlpha=1;}
+    else flash=null;}
+}
+
+let last=performance.now();
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);draw(dt);requestAnimationFrame(frame);}
+resize();board();controls();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

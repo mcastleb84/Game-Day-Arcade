@@ -95,6 +95,34 @@ h1 span{color:var(--gold)}
       </div>
     </article>
 
+    <article class="card">
+      <a class="art" href="games/ping-pong/index.html" aria-label="Play Ping Pong">
+        <svg viewBox="0 0 320 180" role="img" aria-label="Ping pong table from above with two paddles and a ball">
+          <rect width="320" height="180" fill="#101a15"/>
+          <rect x="34" y="22" width="252" height="140" rx="5" fill="#000" fill-opacity=".4"/>
+          <rect x="28" y="16" width="252" height="140" rx="5" fill="#1d5d9b"/>
+          <rect x="154" y="16" width="126" height="140" fill="#1a5590"/>
+          <rect x="31" y="19" width="246" height="134" fill="none" stroke="#f3efe4" stroke-width="3"/>
+          <line x1="31" y1="86" x2="277" y2="86" stroke="#f3efe4" stroke-width="1.5" stroke-opacity=".7"/>
+          <rect x="150" y="10" width="8" height="152" fill="#22262a"/><rect x="150" y="10" width="3" height="152" fill="#f3efe4"/>
+          <g transform="translate(60 106)"><rect x="-30" y="-5" width="26" height="10" rx="3" fill="#b98a52"/><ellipse rx="10" ry="22" fill="#d6334a" stroke="#7e1424" stroke-width="2.5"/></g>
+          <g transform="translate(250 60)"><rect x="4" y="-5" width="26" height="10" rx="3" fill="#b98a52"/><ellipse rx="10" ry="22" fill="#20262c" stroke="#5aa8ff" stroke-width="2.5"/></g>
+          <path d="M74 100 L 196 70" stroke="#f6f1e6" stroke-opacity=".35" stroke-width="2" stroke-dasharray="4 5"/>
+          <circle cx="204" cy="68" r="7" fill="#000" fill-opacity=".35" transform="translate(3 4)"/>
+          <circle cx="204" cy="68" r="7" fill="#f6efe0"/>
+        </svg>
+      </a>
+      <div class="info">
+        <span class="tag">Table tennis · Versus CPU</span>
+        <h2>Ping Pong</h2>
+        <p>First to 7 points wins. Every win moves you up a level and the CPU gets faster.</p>
+        <div class="meta">
+          <span class="best">Best level <b id="best-pp">–</b></span>
+          <a class="play" href="games/ping-pong/index.html">PLAY</a>
+        </div>
+      </div>
+    </article>
+
     <div class="soon">
       <h3>More games on the way</h3>
       <p>New sports will show up here as they're added.</p>
@@ -104,8 +132,8 @@ h1 span{color:var(--gold)}
 
 <script>
 // Each game saves its own best score in this browser; the lobby reads it to show on the card.
-const GAMES=[{id:'best-lb',key:'lb-best'}];
-GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const el=document.getElementById(g.id);if(el)el.textContent=v;});
+const GAMES=[{id:'best-lb',key:'lb-best',none:'0'},{id:'best-pp',key:'pp-best',none:'–'}];
+GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const el=document.getElementById(g.id);if(el)el.textContent=v||g.none;});
 </script>
 
 <script>
