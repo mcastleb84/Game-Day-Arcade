@@ -83,7 +83,7 @@ button:focus-visible{outline:3px solid var(--def);outline-offset:2px}
       <p class="goal">Score 3 goals out of 5 attempts to beat the level. Miss too many and your run is over.</p>
       <ul>
         <li><b>Move</b><span>Use the joystick in the bottom-left corner of the field. Push toward U, D, L or R (or in between) to run that way.</span></li>
-        <li><b>Shoot</b><span>Tap SHOOT. The ball goes the way your player is facing, so steer toward a corner of the goal.</span></li>
+        <li><b>Shoot</b><span>Tap the middle of the joystick, or the SHOOT button. The ball goes the way your player is facing, so steer toward a corner of the goal.</span></li>
         <li><b>Levels</b><span>The goalie gets quicker every level. A defender joins at level 3, another at level 6, and a third at level 8.</span></li>
         <li><b>Pass</b><span>From level 8 you get a teammate. Tap PASS to send the ball to them and take control of them.</span></li>
         <li><b>Clock</b><span>You have 12 seconds to get a shot off on each attempt.</span></li>
@@ -268,15 +268,20 @@ cv.addEventListener('pointerdown',e=>{
   if(phase==='ready'||phase==='won'||phase==='lost'){act();return;}
   if(stick)return;const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
   if(Math.hypot(x-JX,y-JY)>JR*1.9)return;
-  stick={id:e.pointerId,dx:x-JX,dy:y-JY};
+  // a quick tap on the middle of the joystick shoots; touching anywhere else on it steers
+  stick={id:e.pointerId,dx:x-JX,dy:y-JY,center:Math.hypot(x-JX,y-JY)<JR*.42,t0:performance.now(),moved:0};
   try{cv.setPointerCapture(e.pointerId)}catch(_){}
 });
 cv.addEventListener('pointermove',e=>{
   if(!stick||e.pointerId!==stick.id)return;const r=cv.getBoundingClientRect();
-  stick.dx=e.clientX-r.left-JX;stick.dy=e.clientY-r.top-JY;
+  const nx=e.clientX-r.left-JX,ny=e.clientY-r.top-JY;stick.moved=Math.max(stick.moved,Math.hypot(nx-stick.dx,ny-stick.dy));
+  stick.dx=nx;stick.dy=ny;
 });
 const endStick=e=>{if(stick&&e.pointerId===stick.id)stick=null;};
-cv.addEventListener('pointerup',endStick);cv.addEventListener('pointercancel',endStick);
+cv.addEventListener('pointerup',e=>{
+  if(stick&&e.pointerId===stick.id&&stick.center&&stick.moved<12&&performance.now()-stick.t0<450)shoot();
+  endStick(e);
+});cv.addEventListener('pointercancel',endStick);
 const keys={};
 addEventListener('keydown',e=>{
   if(window.GD_PAUSED||!$('intro').hidden)return;
@@ -288,7 +293,7 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 function input(){
   let x=0,y=0;
-  if(stick){const R=JR*.8,m=Math.hypot(stick.dx,stick.dy);if(m>6){const k=Math.min(1,m/R);x=stick.dx/m*k;y=stick.dy/m*k;}}
+  if(stick){const R=JR*.8,m=Math.hypot(stick.dx,stick.dy);if(m>(stick.center&&stick.moved<12?JR*.42:6)){const k=Math.min(1,m/R);x=stick.dx/m*k;y=stick.dy/m*k;}}
   const kx=(keys.arrowright||keys.d?1:0)-(keys.arrowleft||keys.a?1:0),ky=(keys.arrowdown||keys.s?1:0)-(keys.arrowup||keys.w?1:0);
   if(kx||ky){const m=Math.hypot(kx,ky);x=kx/m;y=ky/m;}
   return {x,y};
@@ -487,8 +492,11 @@ function drawStick(){
     ctx.moveTo(tx+ax*s,ty+ay*s);ctx.lineTo(tx-ay*s-ax*s,ty+ax*s-ay*s);ctx.lineTo(tx+ay*s-ax*s,ty-ax*s-ay*s);ctx.closePath();ctx.fill();
   }
   const kx=stick?JX+stick.dx*k:JX,ky=stick?JY+stick.dy*k:JY;
-  ctx.fillStyle=stick?'rgba(242,179,61,.95)':'rgba(242,179,61,.6)';circle(kx,ky,R*.36);ctx.fill();
-  ctx.strokeStyle='rgba(27,20,5,.5)';ctx.lineWidth=1.5;ctx.stroke();
+  const can=phase==='play'&&ball&&ball.owner===ctrl;
+  ctx.fillStyle=can?(stick?'rgba(242,179,61,.97)':'rgba(242,179,61,.85)'):'rgba(159,177,165,.55)';circle(kx,ky,R*.4);ctx.fill();
+  ctx.strokeStyle='rgba(27,20,5,.55)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='#1b1405';ctx.font='700 '+Math.round(R*.21)+'px "Barlow Condensed",Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('SHOOT',kx,ky+1);
 }
 function draw(){
   drawPitch();
