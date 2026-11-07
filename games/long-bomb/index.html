@@ -511,8 +511,8 @@ function drawRoutes(){
   ctx.restore();
 }
 const KIT={
-  o:{helmet:'#14263f',hiLite:'#3a5684',stripe:'#f2b33d',jersey:'#f3efe4',trim:'#14263f',num:'#14263f',pants:'#d9a637',sock:'#14263f'},
-  d:{helmet:'#b5203a',hiLite:'#e05a70',stripe:'#f3efe4',jersey:'#c62a40',trim:'#f3efe4',num:'#ffffff',pants:'#f3efe4',sock:'#b5203a'}
+  o:{helmet:'#14263f',hiLite:'#4a6aa0',stripe:'#f2b33d',jersey:'#f3efe4',trim:'#14263f',trim2:'#f2b33d',num:'#14263f',numEdge:'#f2b33d',pants:'#d9a637',pantStripe:'#14263f',sock:'#14263f',glove:'#14263f',mask:'#d8dbe0'},
+  d:{helmet:'#b5203a',hiLite:'#ec7085',stripe:'#f3efe4',jersey:'#c62a40',trim:'#f3efe4',trim2:'#14263f',num:'#ffffff',numEdge:'#14263f',pants:'#f3efe4',pantStripe:'#c62a40',sock:'#b5203a',glove:'#f3efe4',mask:'#2a2a2e'}
 };
 const SKIN=['#8d5524','#c68642','#5c3a1e','#e0ac69','#a0672f','#f1c27d'];
 const DSCALE=1.7; // dancer is drawn larger so the moves read on a phone
@@ -534,65 +534,129 @@ function shade(hex,a){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b
 function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,r):ctx.rect(x,y,w,h);}
 // Player sprite, anchored at the feet. Offense faces downfield (we see the back of the helmet and the number on the back);
 // defense faces the offense (we see the facemask and the number on the front).
+// Tapered limb (capsule) from A to B, widths wa/wb, with a soft highlight on the lit (upper-left) side.
+function limb(ax,ay,bx,by,wa,wb,col,hi){
+  const dx=bx-ax,dy=by-ay,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L;
+  ctx.fillStyle=col;ctx.beginPath();
+  ctx.moveTo(ax+nx*wa,ay+ny*wa);ctx.lineTo(bx+nx*wb,by+ny*wb);ctx.lineTo(bx-nx*wb,by-ny*wb);ctx.lineTo(ax-nx*wa,ay-ny*wa);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.arc(ax,ay,wa,0,7);ctx.arc(bx,by,wb,0,7);ctx.fill();
+  if(hi){const sgn=nx<0?1:-1;ctx.fillStyle=hi;ctx.beginPath();
+    ctx.moveTo(ax+sgn*nx*wa*.85,ay+sgn*ny*wa*.85);ctx.lineTo(bx+sgn*nx*wb*.85,by+sgn*ny*wb*.85);ctx.lineTo(bx+sgn*nx*wb*.2,by+sgn*ny*wb*.2);ctx.lineTo(ax+sgn*nx*wa*.2,ay+sgn*ny*wa*.2);ctx.closePath();ctx.fill();}
+}
+// Player, anchored at the feet. Offense faces downfield (back of helmet, number + nameplate on the back);
+// defense faces the offense (facemask, eyes, number on the chest).
 function drawPlayer(p,ring){
   const X=sx(p.x),Y=sy(p.y),k=s*1.38,K=KIT[p.team],skin=SKIN[p.num%SKIN.length];
+  const skinD=shade(skin,-.28),skinL=shade(skin,.22);
   const pose=G.phase==='celebrate'&&G.celeb&&p===G.celeb.r?dancePose(G.celeb):null;
   const front=pose&&pose.front!==null?pose.front:p.team==='d';
   const run=pose?pose.run:(p.mv?Math.sin(p.ph||0):0);
+  const big=p.num>=50; // linemen (#55,66,72,9x) are bulkier
+  const bw=big?1.14:1;
   ctx.save();ctx.translate(X,Y);
   // shadow + target ring
-  {const sg=ctx.createRadialGradient(.45*k,.1*k,0,.45*k,.1*k,1.7*k);sg.addColorStop(0,'rgba(0,0,0,.5)');sg.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=sg;ctx.save();ctx.scale(1,.38);ctx.beginPath();ctx.arc(.45*k,.26*k,1.7*k,0,7);ctx.fill();ctx.restore();}
+  {const sg=ctx.createRadialGradient(.45*k,.1*k,0,.45*k,.1*k,1.8*k);sg.addColorStop(0,'rgba(0,0,0,.5)');sg.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=sg;ctx.save();ctx.scale(1,.38);ctx.beginPath();ctx.arc(.45*k,.26*k,1.8*k,0,7);ctx.fill();ctx.restore();}
   if(ring){const pulse=reduce?1:1+.12*Math.sin(performance.now()/180);ctx.strokeStyle=C.gold;ctx.shadowColor=C.gold;ctx.shadowBlur=k*.9;ctx.lineWidth=Math.max(2,k*.24);ctx.beginPath();ctx.ellipse(0,0,1.9*k*pulse,.75*k*pulse,0,0,7);ctx.stroke();ctx.shadowBlur=0;}
   if(pose){ctx.scale(DSCALE,DSCALE);ctx.translate(pose.dx*k,pose.dy*k);ctx.scale(pose.sx,1);}
-  // legs: pants, sock, shoe; alternate lift while running
+  if(!pose&&run)ctx.translate(0,-Math.abs(run)*.1*k); // stride bob
+  ctx.lineJoin='round';
+  // ---- legs: thigh (pants + knee pad), shin (sock), cleat ----
   [[-1,Math.max(0,run)],[1,Math.max(0,-run)]].forEach(([side,lift])=>{
-    const lx=side*.42*k-.3*k, top=-1.95*k, bot=-lift*.5*k;
-    ctx.fillStyle=K.pants;rr(lx,top,.62*k,(bot-top)*.55,.15*k);ctx.fill();
-    ctx.fillStyle=K.sock;ctx.fillRect(lx+.04*k,top+(bot-top)*.55,.54*k,(bot-top)*.32);
-    ctx.fillStyle='#16161a';rr(lx-.03*k,bot-.32*k,.7*k,.34*k,.12*k);ctx.fill();
+    const hx=side*.42*bw*k,hy=-1.95*k,kx=side*.5*bw*k,ky=(-1.05-lift*.45)*k,ax=side*.46*k,ay=(-.22-lift*.55)*k;
+    limb(hx,hy,kx,ky,.4*bw*k,.3*k,shade(K.pants,-.12),K.pants);           // thigh
+    limb(kx,ky,ax,ay,.26*k,.18*k,shade(K.sock,-.1),shade(K.sock,.15));   // calf in sock
+    ctx.fillStyle=K.pantStripe;ctx.fillRect(kx-.31*k,ky-.12*k,.62*k,.12*k); // pant cuff below knee
+    ctx.fillStyle='rgba(255,255,255,.18)';ctx.beginPath();ctx.ellipse(kx,ky-.28*k,.22*k,.14*k,0,0,7);ctx.fill(); // knee pad bulge
+    ctx.fillStyle='rgba(255,255,255,.75)';ctx.fillRect(ax-.17*k,ay-.32*k,.34*k,.07*k); // sock stripe
+    // cleat
+    ctx.fillStyle='#141418';rr(ax-.3*k,ay-.12*k,.62*k,.32*k,.13*k);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.55)';ctx.fillRect(ax-.22*k,ay+.02*k,.42*k,.05*k);
+    // outer pant stripe
+    ctx.strokeStyle=K.pantStripe;ctx.lineWidth=.1*k;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(hx+side*.33*bw*k,hy+.05*k);ctx.lineTo(kx+side*.25*k,ky-.15*k);ctx.stroke();
   });
-  // arms: swing opposite the legs, or follow the dance pose
+  // ---- arms ----
   const arms=()=>[-1,1].forEach((side,i)=>{
     const sw=side<0?run:-run;
-    const [hx,hy]=pose?pose.hands[i]:[side*1.3,-1.9+sw*.18];
-    const Sx=side*1.05,Sy=-3.25,ex=(Sx+hx)/2+side*.3,ey=(Sy+hy)/2+.1;
-    ctx.lineCap='round';
-    ctx.strokeStyle=K.jersey;ctx.lineWidth=.55*k;ctx.beginPath();ctx.moveTo(Sx*k,Sy*k);ctx.lineTo(ex*k,ey*k);ctx.stroke();
-    ctx.strokeStyle=skin;ctx.lineWidth=.42*k;ctx.beginPath();ctx.moveTo(ex*k,ey*k);ctx.lineTo(hx*k,hy*k);ctx.stroke();
-    ctx.fillStyle=front?'#f3efe4':'#1b1b1f';ctx.beginPath();ctx.arc(hx*k,(hy+.1)*k,.24*k,0,7);ctx.fill();
+    const [hx,hy]=pose?pose.hands[i]:[side*1.35*bw,-1.95+sw*.2];
+    const Sx=side*1.18*bw,Sy=-3.3,ex=(Sx+hx)/2+side*.32,ey=(Sy+hy)/2+.12;
+    limb(Sx*k,Sy*k,ex*k,ey*k,.34*bw*k,.27*k,skinD,skin);                 // upper arm
+    limb(ex*k,ey*k,hx*k,hy*k,.27*k,.2*k,skinD,skin);                     // forearm
+    const mx=Sx+(ex-Sx)*.45,my=Sy+(ey-Sy)*.45;
+    limb(Sx*k,Sy*k,mx*k,my*k,.42*bw*k,.38*bw*k,shade(K.jersey,-.15),K.jersey); // sleeve
+    ctx.strokeStyle=K.trim;ctx.lineWidth=.09*k;ctx.lineCap='butt';         // sleeve stripes
+    const dxu=ex-Sx,dyu=ey-Sy,Lu=Math.hypot(dxu,dyu),nx=-dyu/Lu,ny=dxu/Lu;
+    [.3,.38].forEach(f=>{const cx=Sx+dxu*f,cy=Sy+dyu*f;ctx.beginPath();ctx.moveTo((cx+nx*.4)*k,(cy+ny*.4)*k);ctx.lineTo((cx-nx*.4)*k,(cy-ny*.4)*k);ctx.stroke();});
+    // wrist tape + glove
+    const wx=ex+(hx-ex)*.78,wy=ey+(hy-ey)*.78;
+    ctx.fillStyle='#f4f4f2';ctx.beginPath();ctx.arc(wx*k,wy*k,.21*k,0,7);ctx.fill();
+    ctx.fillStyle=K.glove;ctx.beginPath();ctx.arc(hx*k,(hy+.08)*k,.25*k,0,7);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.22)';ctx.beginPath();ctx.arc((hx-.07)*k,(hy+.01)*k,.1*k,0,7);ctx.fill();
   });
   if(!pose)arms();
-  // torso: jersey tapering to the waist, with shoulder pads
-  const jg=ctx.createLinearGradient(-1.4*k,-3.8*k,1.4*k,-1.8*k);jg.addColorStop(0,shade(K.jersey,.18));jg.addColorStop(.55,K.jersey);jg.addColorStop(1,shade(K.jersey,-.28));
+  // ---- torso: jersey over shoulder pads, tapering to a belted waist ----
+  const jg=ctx.createLinearGradient(-1.6*k,-3.9*k,1.5*k,-1.8*k);jg.addColorStop(0,shade(K.jersey,.16));jg.addColorStop(.5,K.jersey);jg.addColorStop(1,shade(K.jersey,-.3));
   ctx.fillStyle=jg;ctx.beginPath();
-  ctx.moveTo(-1.15*k,-3.3*k);ctx.lineTo(1.15*k,-3.3*k);ctx.lineTo(.85*k,-1.85*k);ctx.lineTo(-.85*k,-1.85*k);ctx.closePath();ctx.fill();
-  rr(-1.4*k,-3.75*k,2.8*k,.85*k,.42*k);ctx.fill();
-  ctx.fillStyle=K.trim;ctx.fillRect(-1.38*k,-3.25*k,.32*k,.14*k);ctx.fillRect(1.06*k,-3.25*k,.32*k,.14*k);
-  ctx.fillRect(-.85*k,-2.02*k,1.7*k,.17*k);
-  ctx.strokeStyle='rgba(0,0,0,.25)';ctx.lineWidth=Math.max(1,.08*k);rr(-1.4*k,-3.75*k,2.8*k,.85*k,.42*k);ctx.stroke();
-  // number
-  ctx.fillStyle=K.num;ctx.font=`700 ${1.15*k}px "Barlow Condensed", Arial, sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText(p.num,0,-2.55*k);
-  // helmet with sheen and center stripe
-  const hy=-4.35*k,hr=.82*k;
-  const g=ctx.createRadialGradient(-.3*k,hy-.35*k,.1*k,0,hy,hr);g.addColorStop(0,K.hiLite);g.addColorStop(1,K.helmet);
-  ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,hy,hr,0,7);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=Math.max(1,.07*k);ctx.stroke();
-  ctx.strokeStyle=K.stripe;ctx.lineWidth=.2*k;ctx.lineCap='butt';
-  ctx.beginPath();ctx.moveTo(0,hy-hr+.05*k);ctx.lineTo(0,front?hy-.1*k:hy+hr-.08*k);ctx.stroke();
+  ctx.moveTo(-1.2*bw*k,-3.35*k);
+  ctx.bezierCurveTo(-1.15*bw*k,-2.7*k,-.95*bw*k,-2.25*k,-.88*bw*k,-1.9*k);
+  ctx.lineTo(.88*bw*k,-1.9*k);
+  ctx.bezierCurveTo(.95*bw*k,-2.25*k,1.15*bw*k,-2.7*k,1.2*bw*k,-3.35*k);
+  ctx.closePath();ctx.fill();
+  // shoulder pads: broad dome
+  ctx.beginPath();ctx.ellipse(0,-3.5*k,1.62*bw*k,.6*k,0,0,7);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.16)';ctx.beginPath();ctx.ellipse(-.55*k,-3.7*k,.8*k,.22*k,-.1,0,7);ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.28)';ctx.lineWidth=Math.max(1,.07*k);ctx.beginPath();ctx.ellipse(0,-3.5*k,1.62*bw*k,.6*k,0,0,7);ctx.stroke();
+  // side panels / fabric folds
+  ctx.strokeStyle='rgba(0,0,0,.14)';ctx.lineWidth=.06*k;ctx.beginPath();ctx.moveTo(-.55*k,-3.0*k);ctx.quadraticCurveTo(-.65*k,-2.4*k,-.5*k,-2.0*k);ctx.moveTo(.6*k,-2.9*k);ctx.quadraticCurveTo(.7*k,-2.4*k,.55*k,-2.0*k);ctx.stroke();
+  // belt
+  ctx.fillStyle='#1a1a1e';ctx.fillRect(-.9*bw*k,-2.02*k,1.8*bw*k,.17*k);
+  ctx.fillStyle=K.trim2;ctx.fillRect(-.12*k,-2.03*k,.24*k,.19*k);
+  // collar
+  ctx.fillStyle=K.trim;ctx.beginPath();ctx.ellipse(0,-3.82*k,.5*k,.2*k,0,0,7);ctx.fill();
+  // number with outline (+ nameplate on the back)
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  const fs=(front?1.0:1.2)*k,ny=front?-2.75*k:-2.62*k;
+  if(!front){ctx.fillStyle=shade(K.jersey,-.2);rr(-.62*k,-3.3*k,1.24*k,.2*k,.06*k);ctx.fill();ctx.fillStyle=K.num;ctx.fillRect(-.48*k,-3.23*k,.96*k,.06*k);}
+  ctx.font=`700 ${fs}px "Barlow Condensed", Arial, sans-serif`;
+  ctx.lineWidth=Math.max(1,.08*k);ctx.strokeStyle=K.numEdge;ctx.strokeText(p.num,0,ny);
+  ctx.fillStyle=K.num;ctx.fillText(p.num,0,ny);
+  // neck
+  limb(0,-3.85*k,0,-4.05*k,.3*k,.3*k,skinD,skin);
+  // ---- helmet ----
+  const hy=-4.45*k,hr=.86*k;
+  const g=ctx.createRadialGradient(-.32*k,hy-.4*k,.06*k,0,hy,hr*1.05);g.addColorStop(0,K.hiLite);g.addColorStop(.55,K.helmet);g.addColorStop(1,shade(K.helmet,-.35));
+  ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(0,hy,hr,hr*.97,0,0,7);ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=Math.max(1,.06*k);ctx.stroke();
+  // center stripe (white–color–white)
+  const sb=front?hy-.05*k:hy+hr*.8;
+  ctx.lineCap='butt';ctx.strokeStyle='#f4f4f2';ctx.lineWidth=.26*k;ctx.beginPath();ctx.moveTo(0,hy-hr+.04*k);ctx.lineTo(0,sb);ctx.stroke();
+  ctx.strokeStyle=K.stripe;ctx.lineWidth=.14*k;ctx.stroke();
   if(front){
-    // face opening + facemask bars
-    ctx.fillStyle=skin;rr(-.42*k,hy-.05*k,.84*k,.62*k,.2*k);ctx.fill();
-    ctx.fillStyle='#111';ctx.fillRect(-.25*k,hy+.08*k,.13*k,.1*k);ctx.fillRect(.12*k,hy+.08*k,.13*k,.1*k);
-    ctx.strokeStyle='#c9ccd1';ctx.lineWidth=Math.max(1,.11*k);
-    ctx.beginPath();
-    ctx.moveTo(-.62*k,hy+.05*k);ctx.lineTo(.62*k,hy+.05*k);
-    ctx.moveTo(-.55*k,hy+.38*k);ctx.lineTo(.55*k,hy+.38*k);
-    ctx.moveTo(0,hy+.05*k);ctx.lineTo(0,hy+.7*k);
-    ctx.stroke();
+    // face in the opening, eye black, then a gray cage facemask and jaw pads
+    ctx.fillStyle=shade(skin,-.15);rr(-.46*k,hy-.08*k,.92*k,.72*k,.24*k);ctx.fill();
+    ctx.fillStyle=skin;rr(-.36*k,hy+.02*k,.72*k,.58*k,.2*k);ctx.fill();
+    ctx.fillStyle='#111';ctx.fillRect(-.27*k,hy+.12*k,.15*k,.09*k);ctx.fillRect(.12*k,hy+.12*k,.15*k,.09*k);
+    ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(-.3*k,hy+.24*k,.2*k,.05*k);ctx.fillRect(.1*k,hy+.24*k,.2*k,.05*k);
+    ctx.fillStyle=shade(K.helmet,-.2);ctx.beginPath();ctx.ellipse(-.62*k,hy+.3*k,.2*k,.3*k,0,0,7);ctx.ellipse(.62*k,hy+.3*k,.2*k,.3*k,0,0,7);ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=Math.max(1,.13*k);ctx.lineCap='round';
+    const cage=()=>{ctx.beginPath();
+      ctx.moveTo(-.7*k,hy+.02*k);ctx.lineTo(.7*k,hy+.02*k);
+      ctx.moveTo(-.66*k,hy+.36*k);ctx.quadraticCurveTo(0,hy+.48*k,.66*k,hy+.36*k);
+      ctx.moveTo(-.5*k,hy+.66*k);ctx.quadraticCurveTo(0,hy+.78*k,.5*k,hy+.66*k);
+      ctx.moveTo(-.18*k,hy+.02*k);ctx.lineTo(-.16*k,hy+.74*k);ctx.moveTo(.18*k,hy+.02*k);ctx.lineTo(.16*k,hy+.74*k);
+      ctx.moveTo(-.7*k,hy+.02*k);ctx.quadraticCurveTo(-.7*k,hy+.5*k,-.5*k,hy+.66*k);ctx.moveTo(.7*k,hy+.02*k);ctx.quadraticCurveTo(.7*k,hy+.5*k,.5*k,hy+.66*k);
+      ctx.stroke();};
+    ctx.save();ctx.translate(.03*k,.04*k);cage();ctx.restore();   // mask shadow
+    ctx.strokeStyle=K.mask;ctx.lineWidth=Math.max(1,.09*k);cage();
   }else{
-    ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.arc(-.62*k,hy+.12*k,.14*k,0,7);ctx.arc(.62*k,hy+.12*k,.14*k,0,7);ctx.fill();
+    // back of helmet: rear bumper, ear holes, chin strap
+    ctx.fillStyle='rgba(0,0,0,.35)';rr(-.42*k,hy+.56*k,.84*k,.16*k,.08*k);ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,.4)';ctx.beginPath();ctx.arc(-.7*k,hy+.12*k,.12*k,0,7);ctx.arc(.7*k,hy+.12*k,.12*k,0,7);ctx.fill();
+    ctx.strokeStyle='rgba(240,240,240,.7)';ctx.lineWidth=Math.max(1,.07*k);ctx.beginPath();ctx.moveTo(-.78*k,hy+.32*k);ctx.lineTo(-.6*k,hy+.8*k);ctx.moveTo(.78*k,hy+.32*k);ctx.lineTo(.6*k,hy+.8*k);ctx.stroke();
+    ctx.strokeStyle=K.mask;ctx.lineWidth=Math.max(1,.09*k);ctx.beginPath();ctx.moveTo(-.84*k,hy+.1*k);ctx.lineTo(-.92*k,hy+.45*k);ctx.moveTo(.84*k,hy+.1*k);ctx.lineTo(.92*k,hy+.45*k);ctx.stroke();
   }
-  ctx.fillStyle='rgba(255,255,255,.55)';ctx.beginPath();ctx.ellipse(-.32*k,hy-.42*k,.22*k,.12*k,-.5,0,7);ctx.fill();
+  // glossy shell highlight
+  ctx.fillStyle='rgba(255,255,255,.6)';ctx.beginPath();ctx.ellipse(-.34*k,hy-.48*k,.24*k,.11*k,-.55,0,7);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.25)';ctx.beginPath();ctx.ellipse(.42*k,hy-.2*k,.08*k,.2*k,.3,0,7);ctx.fill();
   if(pose)arms();
   ctx.restore();
 }
