@@ -155,6 +155,43 @@ h1 span{color:var(--gold)}
       </div>
     </article>
     <article class="card">
+      <a class="art" href="games/last-bowl/index.html" aria-label="Play Last Bowl">
+        <svg viewBox="0 0 320 180" role="img" aria-label="Tournament bracket lines leading to a gold trophy">
+          <rect width="320" height="180" fill="#14263f"/>
+          <g fill="#2f6b3a"><rect y="128" width="320" height="52"/></g>
+          <g fill="#2b6335"><rect y="146" width="320" height="16"/></g>
+          <g stroke="#f3efe4" stroke-opacity=".75" stroke-width="2.5" fill="none" stroke-linecap="round">
+            <path d="M20 28h34v26H20M54 41h28M20 82h34v26H20M54 95h28M82 41v54M82 68h40"/>
+            <path d="M300 28h-34v26h34M266 41h-28M300 82h-34v26h34M266 95h-28M238 41v54M238 68h-40"/>
+          </g>
+          <g fill="#f2b33d" stroke="none">
+            <circle cx="20" cy="28" r="4"/><circle cx="20" cy="54" r="4"/><circle cx="20" cy="82" r="4"/><circle cx="20" cy="108" r="4"/>
+            <circle cx="300" cy="28" r="4"/><circle cx="300" cy="54" r="4"/><circle cx="300" cy="82" r="4"/><circle cx="300" cy="108" r="4"/>
+          </g>
+          <g transform="translate(160 70)">
+            <ellipse cx="0" cy="58" rx="40" ry="7" fill="#000" fill-opacity=".3"/>
+            <path d="M-26 -40h52v24a26 26 0 0 1-52 0z" fill="#f2b33d"/>
+            <path d="M-26 -34h-14v6a16 16 0 0 0 16 16M26 -34h14v6a16 16 0 0 1-16 16" fill="none" stroke="#f2b33d" stroke-width="5"/>
+            <rect x="-7" y="9" width="14" height="18" fill="#d9a637"/>
+            <rect x="-22" y="27" width="44" height="11" rx="3" fill="#f2b33d"/>
+            <rect x="-28" y="38" width="56" height="12" rx="3" fill="#a8761c"/>
+            <path d="M-14 -34v16" stroke="#fff6d8" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+            <g transform="translate(0 -18) rotate(-20)"><ellipse rx="11" ry="7" fill="#7a4320" stroke="#3d1f0c" stroke-width="1.5"/><line x1="-4" y1="0" x2="4" y2="0" stroke="#f3efe4" stroke-width="2"/></g>
+          </g>
+          <text x="160" y="170" text-anchor="middle" font-family="Graduate, Georgia, serif" font-size="16" fill="#f3efe4">LAST BOWL</text>
+        </svg>
+      </a>
+      <div class="info">
+        <span class="tag">Football · Tournament</span>
+        <h2>Last Bowl</h2>
+        <p>Twelve teams, one trophy. Beat the computer teams on offense and defense. First to 21 wins, lose once and you're out.</p>
+        <div class="meta">
+          <span class="best">Titles <b id="best-lbw">0</b></span>
+          <a class="play" href="games/last-bowl/index.html">PLAY</a>
+        </div>
+      </div>
+    </article>
+    <article class="card">
       <a class="art" href="games/soccer/index.html" aria-label="Play Soccer Shootout">
         <svg viewBox="0 0 320 180" role="img" aria-label="Soccer striker shooting past a defender at the goalie">
           <rect width="320" height="180" fill="#1d4a2a"/>
@@ -301,7 +338,7 @@ h1 span{color:var(--gold)}
 
 <script>
 // Each game saves its own best score in this browser; the lobby reads it to show on the card.
-const GAMES=[{id:'best-lb',key:'lb-best',none:'0'},{id:'best-pp',key:'pp-best',none:'–'},{id:'best-bp',key:'bp-best',none:'–'},{id:'best-sc',key:'sc-best',none:'–'},{id:'best-ws',key:'ws-solved',none:'0'},{id:'best-cw',key:'cw-solved',none:'0'}];
+const GAMES=[{id:'best-lb',key:'lb-best',none:'0'},{id:'best-lbw',key:'lbw-titles',none:'0'},{id:'best-pp',key:'pp-best',none:'–'},{id:'best-bp',key:'bp-best',none:'–'},{id:'best-sc',key:'sc-best',none:'–'},{id:'best-ws',key:'ws-solved',none:'0'},{id:'best-cw',key:'cw-solved',none:'0'}];
 GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const el=document.getElementById(g.id);if(el)el.textContent=v||g.none;});
 </script>
 
