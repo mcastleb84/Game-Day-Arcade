@@ -46,7 +46,7 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(36px,11vw,64px);li
 h1 span{color:var(--gold)}
 .lede{margin:4px 0 0;font-size:18px;color:var(--muted);font-weight:500;max-width:34em}
 .games{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
 .art{aspect-ratio:16/9;max-width:100%;display:block;background:var(--turf)}
 .art svg{width:100%;height:100%;display:block}
 .info{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px}
@@ -62,6 +62,14 @@ h1 span{color:var(--gold)}
 .soon h3{margin:0;font-family:var(--display);font-weight:400;font-size:20px;color:var(--chalk)}
 .soon p{margin:0;font-size:16px;color:var(--muted);line-height:1.3}
 
+/* Favorite star: top-right of each game card. */
+.fav{position:absolute;top:8px;right:8px;z-index:2;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;cursor:pointer;
+  background:rgba(8,40,42,.82);border:1px solid rgba(243,239,228,.35);color:var(--chalk);padding:0;touch-action:manipulation}
+.fav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.fav[aria-pressed="true"]{color:var(--gold);border-color:var(--gold)}
+.fav[aria-pressed="true"] svg{fill:currentColor}
+.fav:hover{border-color:var(--gold)}
+.fav:focus-visible{outline:3px solid #5aa8ff;outline-offset:2px}
 /* Sections + sidebar: a drawer on phones, a fixed column on wide screens. */
 .shell{display:block}
 .side{position:fixed;inset:0 auto 0 0;z-index:40;width:min(290px,84vw);background:var(--panel);border-right:1px solid var(--line);
@@ -110,6 +118,7 @@ h1 span{color:var(--gold)}
   <div class="side-top"><span class="side-title">Game Day <span>Arcade</span></span><button type="button" class="side-close" id="sideClose" aria-label="Close menu">×</button></div>
   <nav class="nav">
     <button type="button" class="nav-item" data-cat="all" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg><span>All games</span><b>6</b></button>
+    <button type="button" class="nav-item" data-cat="favorites"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg><span>Favorites</span><b>0</b></button>
     <button type="button" class="nav-item" data-cat="sports"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="9.5" ry="6" transform="rotate(-35 12 12)"/><path d="M9 15l6-6M10.5 11.5l2 2M12 10l2 2M9 13l2 2" /></svg><span>Sports</span><b>3</b></button>
     <button type="button" class="nav-item" data-cat="puzzles"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3.5a2 2 0 1 1 4 0H15v3.5a2 2 0 1 1 0 4V19H4z"/></svg><span>Puzzles</span><b>2</b></button>
     <button type="button" class="nav-item" data-cat="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11L12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/></svg><span>Home Games</span><b>1</b></button>
@@ -126,6 +135,11 @@ h1 span{color:var(--gold)}
     <p class="lede">Pick a game and play. Your best scores are saved on this device.</p>
   </header>
 
+  <section class="group" data-cat="favorites" aria-labelledby="h-favs" hidden>
+    <div class="ghead"><h2 id="h-favs">Favorites</h2><p>Your starred games, saved on this device.</p></div>
+    <div class="games" id="favGames"></div>
+    <div class="soon" id="favEmpty" hidden><h3>No favorites yet</h3><p>Tap the star on any game to add it here.</p></div>
+  </section>
   <section class="group" data-cat="sports" aria-labelledby="h-sports">
     <div class="ghead"><h2 id="h-sports">Sports</h2><p>Football, soccer and table tennis.</p></div>
     <div class="games">
@@ -365,6 +379,39 @@ GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const 
 })();
 </script>
 
+<script>
+// Favorites: a star on every game card. Starred games show in their own section (top of "All games" too) and are saved on this device.
+(()=>{
+  const KEY='arcade-favs',STAR='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>';
+  let favs=[];try{favs=JSON.parse(localStorage.getItem(KEY)||'[]')||[]}catch(e){}
+  const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(favs))}catch(e){}};
+  const grid=document.getElementById('favGames'),group=grid.closest('.group'),empty=document.getElementById('favEmpty');
+  const cards=[...document.querySelectorAll('.group:not([data-cat="favorites"]) .card')];
+  const idOf=c=>(c.querySelector('a.play').getAttribute('href').match(/games\/([^/]+)\//)||[])[1];
+  const nameOf=c=>c.querySelector('h2').textContent.trim();
+  function addStar(card){
+    const id=idOf(card),b=document.createElement('button');
+    b.type='button';b.className='fav';b.dataset.id=id;b.innerHTML=STAR;
+    b.addEventListener('click',()=>{const i=favs.indexOf(id);if(i<0)favs.push(id);else favs.splice(i,1);save();render();});
+    card.appendChild(b);
+  }
+  cards.forEach(addStar);
+  const valid=new Set(cards.map(idOf));favs=favs.filter(id=>valid.has(id));
+  function cur(){return document.querySelector('.nav-item[aria-current="page"]')?.dataset.cat||'all';}
+  function render(){
+    grid.innerHTML='';
+    favs.forEach(id=>{const src=cards.find(c=>idOf(c)===id);if(!src)return;const c=src.cloneNode(true);c.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));c.querySelector('.fav').remove();addStar(c);grid.appendChild(c);});
+    document.querySelectorAll('.fav').forEach(b=>{const on=favs.includes(b.dataset.id),nm=nameOf(b.closest('.card'));b.setAttribute('aria-pressed',on);b.setAttribute('aria-label',(on?'Remove ':'Add ')+nm+(on?' from':' to')+' favorites');});
+    const cat=cur();group.hidden=!(cat==='favorites'||(cat==='all'&&favs.length));empty.hidden=favs.length>0;
+    // sidebar counts
+    document.querySelectorAll('.nav-item').forEach(n=>{const b=n.querySelector('b'),c=n.dataset.cat;if(!b||b.textContent==='Soon')return;
+      b.textContent=c==='favorites'?favs.length:c==='all'?cards.length:document.querySelectorAll('.group[data-cat="'+c+'"] .card').length;});
+  }
+  document.querySelectorAll('.nav-item').forEach(n=>n.addEventListener('click',render));
+  addEventListener('pageshow',()=>{try{favs=JSON.parse(localStorage.getItem(KEY)||'[]').filter(id=>valid.has(id))}catch(e){}render();});
+  render();
+})();
+</script>
 <script>
 if('serviceWorker' in navigator){
   // When an update is installed, reload once so the newest version shows right away.

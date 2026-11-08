@@ -23,6 +23,7 @@
   background:transparent;color:var(--chalk,#f3efe4);border:1px solid var(--line,#2a3a30);touch-action:manipulation}
 .gd-panel button:hover{border-color:var(--muted,#9fb1a5)}
 .gd-panel button.gd-go{background:var(--gold,#f2b33d);color:#1b1405;border-color:transparent}
+.gd-panel button.gd-fav[aria-pressed="true"]{color:var(--gold,#f2b33d);border-color:var(--gold,#f2b33d)}
 .gd-panel button.gd-leave{color:#ff8a98;border-color:#5a2a32}
 .gd-panel button:focus-visible{outline:3px solid #5aa8ff;outline-offset:2px}
 `;
@@ -44,11 +45,18 @@
     '<h2 id="gdMenuH">Paused</h2><p class="gd-name"></p>'+
     '<button type="button" class="gd-go" data-a="resume">RESUME</button>'+
     '<button type="button" data-a="help">HOW TO PLAY</button>'+
+    '<button type="button" class="gd-fav" data-a="fav"></button>'+
     '<button type="button" data-a="restart"></button>'+
     '<button type="button" class="gd-leave" data-a="leave">LEAVE GAME</button></div>';
   scrim.querySelector('.gd-name').textContent=name;
   scrim.querySelector('[data-a="restart"]').textContent=puzzle?'NEW PUZZLE':'RESTART GAME';
   document.body.appendChild(scrim);
+  // Favorites: same list the lobby uses (localStorage 'arcade-favs', keyed by the game's folder name).
+  const gameId=(location.pathname.match(/games\/([^/]+)\//)||[])[1];
+  const favBtn=scrim.querySelector('[data-a="fav"]');
+  const getFavs=()=>{try{return JSON.parse(localStorage.getItem('arcade-favs')||'[]')||[]}catch(e){return []}};
+  function favLabel(){const on=getFavs().includes(gameId);favBtn.textContent=on?'★ IN FAVORITES':'☆ ADD TO FAVORITES';favBtn.setAttribute('aria-pressed',on);}
+  if(gameId)favLabel();else favBtn.remove();
   const intro=document.getElementById('intro');
   if(!intro)scrim.querySelector('[data-a="help"]').remove();
 
@@ -65,6 +73,7 @@
     const a=e.target.closest('button')?.dataset.a;
     if(a==='resume')close();
     else if(a==='help'){close(true);intro.hidden=false;const go=intro.querySelector('button');go&&go.focus();}
+    else if(a==='fav'){const f=getFavs(),i=f.indexOf(gameId);if(i<0)f.push(gameId);else f.splice(i,1);try{localStorage.setItem('arcade-favs',JSON.stringify(f))}catch(_){}favLabel();}
     else if(a==='restart')location.reload();
     else if(a==='leave')location.href=home;
   });
