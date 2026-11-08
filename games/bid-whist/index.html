@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Bid Whist</title>
+<meta name="theme-color" content="#140d09">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:#140d09}
+body{margin:0;font-size:14px}
+[hidden]{display:none!important}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Graduate&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: card-room app — scoreboard on top, the lamp-lit table with the other three players in the middle, your hand at the bottom of the table. */
+:root{
+  --ink:#140d09;--panel:#21170f;--line:#3d2c1f;--chalk:#f3efe4;--muted:#b8a995;--gold:#f2b33d;--felt:#1f5c36;--red:#e0475c;
+  --display:"Graduate","Rockwell","Georgia",serif;
+  --body:"Barlow Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--ink);color:var(--chalk);font-family:var(--body);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.app{height:100%;max-width:620px;margin:0 auto;display:grid;grid-template-rows:auto auto auto 1fr auto;gap:8px;
+  padding-block:10px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+.back{justify-self:start;color:var(--muted);font-weight:600;font-size:16px;text-decoration:none}
+.bug{display:grid;grid-template-columns:1fr 1fr 1.25fr 1fr;background:linear-gradient(180deg,#2a1d14,#1a120c);border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.45)}
+.bug > div{padding:6px 8px;display:flex;flex-direction:column;gap:1px;min-width:0}
+.bug > div + div{border-left:1px solid var(--line)}
+.lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.val{font-family:var(--display);font-size:clamp(14px,4.2vw,20px);line-height:1.15;white-space:nowrap;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}
+.us .val{color:var(--gold)}
+.bags{font-size:12px;color:var(--muted);font-weight:600}
+.strip{font-size:14px;color:var(--muted);font-weight:600;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:-2px}
+.strip b{color:var(--gold)}
+.fieldwrap{position:relative;min-height:0;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.08);box-shadow:0 12px 30px rgba(0,0,0,.55)}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.box{position:absolute;left:10px;right:10px;bottom:24%;background:rgba(20,13,9,.94);border:1px solid rgba(242,179,61,.35);border-radius:14px;padding:12px 12px 14px;display:flex;flex-direction:column;gap:9px;box-shadow:0 16px 40px rgba(0,0,0,.6);z-index:3}
+.box.top{top:12px;bottom:auto;transform:none}
+.box h3{margin:0;font-family:var(--display);font-weight:400;font-size:20px;color:var(--gold)}
+.box p{margin:0;font-size:15px;line-height:1.25;color:var(--chalk);font-weight:500}
+.bidgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.bidgrid.five{grid-template-columns:repeat(5,1fr)}.bidgrid.four{grid-template-columns:repeat(4,1fr)}.bidgrid.two{grid-template-columns:1fr 1fr}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+button{font-family:var(--display);font-size:18px;letter-spacing:.04em;padding:12px 8px;border-radius:10px;border:0;background:linear-gradient(180deg,#ffc95e,#e9a52b);color:#1b1405;cursor:pointer;touch-action:manipulation}
+button:focus-visible{outline:3px solid #5aa8ff;outline-offset:2px}
+.bidgrid button,.seg button{background:#2c1f15;color:var(--chalk);border:1px solid var(--line);font-size:18px;padding:10px 2px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.seg button{font-family:var(--body);font-weight:700;font-size:16px}
+.bidgrid button.sug{border-color:var(--gold)}
+.bidgrid button.on,.seg button.on{background:var(--gold);color:#1b1405;border-color:var(--gold)}
+.bidgrid button:disabled{opacity:.3;cursor:default}
+.bidgrid button.red .big{color:#ff6b7f}
+.bidgrid .big{font-size:26px;line-height:1}
+.bidgrid small{font-family:var(--body);font-size:13px;font-weight:600;color:var(--muted)}
+.bidgrid button.on small{color:#1b1405}
+.acts{display:flex;gap:8px}.acts button{flex:1}
+.acts button:disabled{background:#2c1f15;color:var(--muted);border:1px solid var(--line);cursor:default;font-size:15px}
+button.ghost{background:transparent;color:var(--chalk);border:1px solid var(--line);flex:0 0 32%}
+.panel,.intro{position:absolute;inset:0;background:rgba(20,13,9,.95);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;z-index:4}
+.panel h2,.intro h2{font-family:var(--display);font-weight:400;font-size:26px;margin:0;color:var(--gold);text-wrap:balance}
+.panel h3{font-family:var(--display);font-weight:400;font-size:18px;margin:0;color:var(--chalk)}
+.panel .note{margin:0;font-size:16px;line-height:1.3;color:var(--chalk);font-weight:500}
+.panel > button,.intro > button{margin-top:auto}
+.sum{width:100%;border-collapse:collapse;font-size:16px}
+.sum th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right;padding:4px}
+.sum td{padding:7px 4px;border-top:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.sum td:first-child,.sum th:first-child{text-align:left}
+.sum tr.us td{color:var(--gold)}
+.sum small{color:var(--muted);font-weight:500}
+.intro{z-index:5}
+.intro .goal{margin:0;font-size:16px;line-height:1.3;font-weight:500}
+.intro ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.intro li{display:grid;grid-template-columns:5.6em 1fr;gap:8px;font-size:15px;line-height:1.25;color:var(--muted);font-weight:500}
+.intro li b{font-weight:700;color:var(--chalk);letter-spacing:.06em;text-transform:uppercase;font-size:13px;padding-top:1px}
+.controls{display:flex;gap:10px;align-items:center;justify-content:space-between;min-height:40px}
+.hint{font-size:15px;color:var(--muted);font-weight:600;line-height:1.2}
+button.mini{font-family:var(--body);font-size:14px;font-weight:600;padding:6px 10px;background:transparent;color:var(--muted);border:1px solid var(--line);white-space:nowrap;flex:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <a class="back" href="../../">‹ All games</a>
+  <div class="bug" aria-live="polite">
+    <div class="us"><span class="lbl" id="nmUs">Us</span><span class="val" id="scUs">0</span></div>
+    <div><span class="lbl" id="nmThem">Them</span><span class="val" id="scThem">0</span></div>
+    <div><span class="lbl" id="l3">Bid</span><span class="val" id="v3">–</span></div>
+    <div><span class="lbl" id="l4">Books</span><span class="val" id="v4">0 / 0</span></div>
+  </div>
+  <div class="strip" id="strip"></div>
+  <div class="fieldwrap" id="wrap">
+    <canvas id="c" aria-label="Card table. Your hand is at the bottom. Tap a card to play it."></canvas>
+    <div class="box" id="bidbox" hidden></div>
+    <div class="panel" id="panel" hidden></div>
+    <div class="intro" id="intro" role="dialog" aria-labelledby="introH">
+      <h2 id="introH">How to Play</h2>
+      <p class="goal">You and your partner (across the table) play against the two players on your left and right. 54 cards with two jokers. First team to the target wins.</p>
+      <ul>
+        <li><b>Bid</b><span>One round of bidding. Bid books over 6 (3 to 7), plus Uptown (high cards win), Downtown (low cards win, ace is still best) or No Trump. No Trump beats the same number. If everyone passes, the dealer is stuck with a bid.</span></li>
+        <li><b>Kitty</b><span>The winner takes the 6-card kitty, names trump (or the direction for No Trump) and throws away 6 cards. The discards count as one book.</span></li>
+        <li><b>Jokers</b><span>Big joker, then little joker, are the highest trumps. In No Trump they can't win a book.</span></li>
+        <li><b>Score</b><span>Make it: score every book over 6. Get set: lose your bid. No Trump counts double.</span></li>
+        <li><b>Tap</b><span>Tap a card to play it. Follow suit when you can.</span></li>
+      </ul>
+      <button id="introGo" type="button">LET'S PLAY</button>
+    </div>
+  </div>
+  <div class="controls"><span class="hint" id="hint"></span><button class="mini" id="snd" type="button">Sound on</button></div>
+</div>
+<script>window.CARD_GAME='whist';</script>
+<script src="../card-table.js"></script>
+<script src="../../menu.js"></script>
+</body>
+</html>

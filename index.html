@@ -122,7 +122,7 @@ h1 span{color:var(--gold)}
     <button type="button" class="nav-item" data-cat="sports"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="9.5" ry="6" transform="rotate(-35 12 12)"/><path d="M9 15l6-6M10.5 11.5l2 2M12 10l2 2M9 13l2 2" /></svg><span>Sports</span><b>3</b></button>
     <button type="button" class="nav-item" data-cat="puzzles"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3.5a2 2 0 1 1 4 0H15v3.5a2 2 0 1 1 0 4V19H4z"/></svg><span>Puzzles</span><b>2</b></button>
     <button type="button" class="nav-item" data-cat="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11L12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/></svg><span>Home Games</span><b>1</b></button>
-    <button type="button" class="nav-item" data-cat="cards"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="10" height="14" rx="1.5" transform="rotate(-10 8 13)"/><rect x="10" y="4" width="10" height="14" rx="1.5" transform="rotate(8 15 11)"/></svg><span>Card Games</span><b>Soon</b></button>
+    <button type="button" class="nav-item" data-cat="cards"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="10" height="14" rx="1.5" transform="rotate(-10 8 13)"/><rect x="10" y="4" width="10" height="14" rx="1.5" transform="rotate(8 15 11)"/></svg><span>Card Games</span><b>2</b></button>
   </nav>
   <p class="side-foot">Best scores are saved on this device.</p>
 </aside>
@@ -339,12 +339,50 @@ h1 span{color:var(--gold)}
     </div>
   </section>
   <section class="group" data-cat="cards" aria-labelledby="h-cards">
-    <div class="ghead"><h2 id="h-cards">Card Games</h2><p>Classic games with a deck of cards.</p></div>
+    <div class="ghead"><h2 id="h-cards">Card Games</h2><p>Spades and Bid Whist at the card table.</p></div>
     <div class="games">
-    <div class="soon">
-      <h3>Card games are on the way</h3>
-      <p>Solitaire, Blackjack and more will show up here as they're added.</p>
-    </div>
+    <article class="card">
+      <a class="art" href="games/spades/index.html" aria-label="Play Spades">
+        <svg viewBox="0 0 320 180" role="img" aria-label="A fan of spades">
+          <defs><radialGradient id="feltsp" cx=".5" cy=".55" r=".7"><stop offset="0" stop-color="#2f7a4a"/><stop offset="1" stop-color="#123d22"/></radialGradient></defs>
+          <rect width="320" height="180" fill="#3a2618"/>
+          <ellipse cx="160" cy="150" rx="190" ry="110" fill="#5a3418"/>
+          <ellipse cx="160" cy="150" rx="178" ry="100" fill="url(#feltsp)"/>
+          <ellipse cx="160" cy="40" rx="70" ry="10" fill="#fff3c4" opacity=".25"/>
+          <g transform="translate(160 200) rotate(-28.0) translate(0 -120)"><rect x="-26" y="-36" width="52" height="72" rx="5" fill="#fbf8f1" stroke="#0003"/><text x="-17" y="-18" font-family="Barlow Condensed, Arial" font-weight="700" font-size="17" fill="#17171c">A</text><text x="-17" y="0" font-size="16" text-anchor="middle" fill="#17171c">♠</text></g><g transform="translate(160 200) rotate(-14.0) translate(0 -120)"><rect x="-26" y="-36" width="52" height="72" rx="5" fill="#fbf8f1" stroke="#0003"/><text x="-17" y="-18" font-family="Barlow Condensed, Arial" font-weight="700" font-size="17" fill="#17171c">K</text><text x="-17" y="0" font-size="16" text-anchor="middle" fill="#17171c">♠</text></g><g transform="translate(160 200) rotate(0.0) translate(0 -120)"><rect x="-26" y="-36" width="52" height="72" rx="5" fill="#fbf8f1" stroke="#0003"/><text x="-17" y="-18" font-family="Barlow Condensed, Arial" font-weight="700" font-size="17" fill="#c4213a">Q</text><text x="-17" y="0" font-size="16" text-anchor="middle" fill="#c4213a">♥</text></g><g transform="translate(160 200) rotate(14.0) translate(0 -120)"><rect x="-26" y="-36" width="52" height="72" rx="5" fill="#fbf8f1" stroke="#0003"/><text x="-17" y="-18" font-family="Barlow Condensed, Arial" font-weight="700" font-size="17" fill="#17171c">10</text><text x="-17" y="0" font-size="16" text-anchor="middle" fill="#17171c">♠</text></g><g transform="translate(160 200) rotate(28.0) translate(0 -120)"><rect x="-26" y="-36" width="52" height="72" rx="5" fill="#fbf8f1" stroke="#0003"/><text x="-17" y="-18" font-family="Barlow Condensed, Arial" font-weight="700" font-size="17" fill="#c4213a">7</text><text x="-17" y="0" font-size="16" text-anchor="middle" fill="#c4213a">♦</text></g>
+        </svg>
+      </a>
+      <div class="info">
+        <span class="tag">Cards · Partners</span>
+        <h2>Spades</h2>
+        <p>Bid your books, cut with spades and watch out for bags. You and your partner against two computer players at a real card table.</p>
+        <div class="meta">
+          <span class="best">Wins <b id="best-sp">0</b></span>
+          <a class="play" href="games/spades/index.html">PLAY</a>
+        </div>
+      </div>
+    </article>
+    <article class="card">
+      <a class="art" href="games/bid-whist/index.html" aria-label="Play Bid Whist">
+        <svg viewBox="0 0 320 180" role="img" aria-label="A fan of cards with jokers">
+          <defs><radialGradient id="feltbw" cx=".5" cy=".55" r=".7"><stop offset="0" stop-color="#2f7a4a"/><stop offset="1" stop-color="#123d22"/></radialGradient></defs>
+          <rect width="320" height="180" fill="#3a2618"/>
+          <ellipse cx="160" cy="150" rx="190" ry="110" fill="#5a3418"/>
+          <ellipse cx="160" cy="150" rx="178" ry="100" fill="url(#feltbw)"/>
+          <ellipse cx="160" cy="40" rx="70" ry="10" fill="#fff3c4" opacity=".25"/>
+          <g transform="translate(160 200) rotate(-28.0) translate(0 -120)"><rect x="-26" y="-36" width="52" height="72" rx="5" fill="#fbf8f1" stroke="#0003"/><text x="-17" y="-18" font-family="Barlow Condensed, Arial" font-weight="700" font-size="17" fill="#c4213a">A</text><text x="-17" y="0" font-size="16" text-anchor="middle" fill="#c4213a">♥</text></g><g transform="translate(160 200) rotate(-14.0) translate(0 -120)"><rect x="-26" y="-36" width="52" height="72" rx="5" fill="#fbf8f1" stroke="#0003"/><text x="-17" y="-18" font-family="Barlow Condensed, Arial" font-weight="700" font-size="17" fill="#c4213a">2</text><text x="-17" y="0" font-size="16" text-anchor="middle" fill="#c4213a">♥</text></g><g transform="translate(160 200) rotate(0.0) translate(0 -120)"><rect x="-26" y="-36" width="52" height="72" rx="5" fill="#fbf8f1" stroke="#0003"/><text x="-17" y="-18" font-family="Barlow Condensed, Arial" font-weight="700" font-size="17" fill="#c4213a">★</text><text x="-17" y="0" font-size="16" text-anchor="middle" fill="#c4213a">★</text></g><g transform="translate(160 200) rotate(14.0) translate(0 -120)"><rect x="-26" y="-36" width="52" height="72" rx="5" fill="#fbf8f1" stroke="#0003"/><text x="-17" y="-18" font-family="Barlow Condensed, Arial" font-weight="700" font-size="17" fill="#17171c">★</text><text x="-17" y="0" font-size="16" text-anchor="middle" fill="#17171c">★</text></g><g transform="translate(160 200) rotate(28.0) translate(0 -120)"><rect x="-26" y="-36" width="52" height="72" rx="5" fill="#fbf8f1" stroke="#0003"/><text x="-17" y="-18" font-family="Barlow Condensed, Arial" font-weight="700" font-size="17" fill="#17171c">K</text><text x="-17" y="0" font-size="16" text-anchor="middle" fill="#17171c">♣</text></g>
+        </svg>
+      </a>
+      <div class="info">
+        <span class="tag">Cards · Partners</span>
+        <h2>Bid Whist</h2>
+        <p>Uptown, downtown or no trump. Win the bid, take the kitty and run the table with the big joker.</p>
+        <div class="meta">
+          <span class="best">Wins <b id="best-bw">0</b></span>
+          <a class="play" href="games/bid-whist/index.html">PLAY</a>
+        </div>
+      </div>
+    </article>
     </div>
   </section>
 </div>
@@ -352,7 +390,7 @@ h1 span{color:var(--gold)}
 
 <script>
 // Each game saves its own best score in this browser; the lobby reads it to show on the card.
-const GAMES=[{id:'best-lb',key:'lb-best',none:'0'},{id:'best-lbw',key:'lbw-titles',none:'0'},{id:'best-pp',key:'pp-best',none:'–'},{id:'best-bp',key:'bp-best',none:'–'},{id:'best-sc',key:'sc-best',none:'–'},{id:'best-ws',key:'ws-solved',none:'0'},{id:'best-cw',key:'cw-solved',none:'0'}];
+const GAMES=[{id:'best-sp',key:'sp-wins',none:'0'},{id:'best-bw',key:'bw-wins',none:'0'},{id:'best-lb',key:'lb-best',none:'0'},{id:'best-lbw',key:'lbw-titles',none:'0'},{id:'best-pp',key:'pp-best',none:'–'},{id:'best-bp',key:'bp-best',none:'–'},{id:'best-sc',key:'sc-best',none:'–'},{id:'best-ws',key:'ws-solved',none:'0'},{id:'best-cw',key:'cw-solved',none:'0'}];
 GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const el=document.getElementById(g.id);if(el)el.textContent=v||g.none;});
 </script>
 
