@@ -102,6 +102,9 @@ h1 span{color:var(--gold)}
 .ghead{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--line);padding-bottom:8px}
 .ghead h2{font-family:var(--display);font-weight:400;font-size:26px;margin:0;letter-spacing:.02em}
 .ghead p{margin:0;font-size:16px;color:var(--muted);font-weight:500}
+.ghead .kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.nav-item.sub{padding:8px 12px 8px 30px;font-size:17px;grid-template-columns:22px 1fr auto}
+.nav-item.sub svg{width:20px;height:20px}
 @media (min-width:980px){
   .side{transform:none;transition:none;width:270px}
   .side-close,.topbar .menu-btn{display:none}
@@ -120,6 +123,9 @@ h1 span{color:var(--gold)}
     <button type="button" class="nav-item" data-cat="all" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg><span>All games</span><b>6</b></button>
     <button type="button" class="nav-item" data-cat="favorites"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg><span>Favorites</span><b>0</b></button>
     <button type="button" class="nav-item" data-cat="sports"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="9.5" ry="6" transform="rotate(-35 12 12)"/><path d="M9 15l6-6M10.5 11.5l2 2M12 10l2 2M9 13l2 2" /></svg><span>Sports</span><b>3</b></button>
+    <button type="button" class="nav-item sub" data-cat="football"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="9" ry="5.5" transform="rotate(-35 12 12)"/><path d="M9.5 14.5l5-5"/></svg><span>Football</span><b>0</b></button>
+    <button type="button" class="nav-item sub" data-cat="soccer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5l3.5 2.5-1.3 4h-4.4L8.5 10z"/><path d="M12 3v4.5M20.5 10l-5 0M16.5 19l-2.3-5M7.5 19l2.3-5M3.5 10l5 0"/></svg><span>Soccer</span><b>0</b></button>
+    <button type="button" class="nav-item sub" data-cat="tabletennis"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M14.6 14.6l5 5"/><circle cx="19" cy="6" r="1.6"/></svg><span>Table Tennis</span><b>0</b></button>
     <button type="button" class="nav-item" data-cat="puzzles"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3.5a2 2 0 1 1 4 0H15v3.5a2 2 0 1 1 0 4V19H4z"/></svg><span>Puzzles</span><b>2</b></button>
     <button type="button" class="nav-item" data-cat="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11L12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/></svg><span>Home Games</span><b>1</b></button>
     <button type="button" class="nav-item" data-cat="cards"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="10" height="14" rx="1.5" transform="rotate(-10 8 13)"/><rect x="10" y="4" width="10" height="14" rx="1.5" transform="rotate(8 15 11)"/></svg><span>Card Games</span><b>2</b></button>
@@ -140,8 +146,8 @@ h1 span{color:var(--gold)}
     <div class="games" id="favGames"></div>
     <div class="soon" id="favEmpty" hidden><h3>No favorites yet</h3><p>Tap the star on any game to add it here.</p></div>
   </section>
-  <section class="group" data-cat="sports" aria-labelledby="h-sports">
-    <div class="ghead"><h2 id="h-sports">Sports</h2><p>Football, soccer and table tennis.</p></div>
+  <section class="group" data-cat="football" data-parent="sports" aria-labelledby="h-football">
+    <div class="ghead"><span class="kicker">Sports</span><h2 id="h-football">Football</h2><p>Long Bomb passing drills and the Last Bowl tournament.</p></div>
     <div class="games">
     <article class="card">
       <a class="art" href="games/long-bomb/index.html" aria-label="Play Long Bomb">
@@ -205,6 +211,11 @@ h1 span{color:var(--gold)}
         </div>
       </div>
     </article>
+    </div>
+  </section>
+  <section class="group" data-cat="soccer" data-parent="sports" aria-labelledby="h-soccer">
+    <div class="ghead"><span class="kicker">Sports</span><h2 id="h-soccer">Soccer</h2><p>Dribble in and beat the keeper.</p></div>
+    <div class="games">
     <article class="card">
       <a class="art" href="games/soccer/index.html" aria-label="Play Soccer Shootout">
         <svg viewBox="0 0 320 180" role="img" aria-label="Soccer striker shooting past a defender at the goalie">
@@ -230,6 +241,11 @@ h1 span{color:var(--gold)}
         </div>
       </div>
     </article>
+    </div>
+  </section>
+  <section class="group" data-cat="tabletennis" data-parent="sports" aria-labelledby="h-tabletennis">
+    <div class="ghead"><span class="kicker">Sports</span><h2 id="h-tabletennis">Table Tennis</h2><p>Rally against the computer.</p></div>
+    <div class="games">
     <article class="card">
       <a class="art" href="games/ping-pong/index.html" aria-label="Play Ping Pong">
         <svg viewBox="0 0 320 180" role="img" aria-label="Ping pong table from above with two paddles and a ball">
@@ -405,7 +421,7 @@ GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const 
   function show(cat,save){
     if(!items.some(i=>i.dataset.cat===cat))cat='all';
     items.forEach(i=>{if(i.dataset.cat===cat)i.setAttribute('aria-current','page');else i.removeAttribute('aria-current');});
-    groups.forEach(g=>g.hidden=cat!=='all'&&g.dataset.cat!==cat);
+    groups.forEach(g=>g.hidden=!(cat==='all'||g.dataset.cat===cat||g.dataset.parent===cat));
     document.getElementById('crumb').textContent=items.find(i=>i.dataset.cat===cat).querySelector('span').textContent;
     if(save){try{localStorage.setItem('arcade-section',cat)}catch(e){}history.replaceState(null,'',cat==='all'?location.pathname:'#'+cat);}
   }
@@ -443,7 +459,7 @@ GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const 
     const cat=cur();group.hidden=!(cat==='favorites'||(cat==='all'&&favs.length));empty.hidden=favs.length>0;
     // sidebar counts
     document.querySelectorAll('.nav-item').forEach(n=>{const b=n.querySelector('b'),c=n.dataset.cat;if(!b||b.textContent==='Soon')return;
-      b.textContent=c==='favorites'?favs.length:c==='all'?cards.length:document.querySelectorAll('.group[data-cat="'+c+'"] .card').length;});
+      b.textContent=c==='favorites'?favs.length:c==='all'?cards.length:document.querySelectorAll('.group[data-cat="'+c+'"] .card, .group[data-parent="'+c+'"] .card').length;});
   }
   document.querySelectorAll('.nav-item').forEach(n=>n.addEventListener('click',render));
   addEventListener('pageshow',()=>{try{favs=JSON.parse(localStorage.getItem(KEY)||'[]').filter(id=>valid.has(id))}catch(e){}render();});
