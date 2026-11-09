@@ -558,6 +558,7 @@ GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const 
   if(new URLSearchParams(location.search).has('r')){const u=new URL(location.href);u.searchParams.delete('r');history.replaceState(null,'',u.pathname+u.search+u.hash);}
 })();
 </script>
+<script src="update-check.js" data-resume="1"></script>
 <script>
 if('serviceWorker' in navigator){
   // When an update is installed, reload once so the newest version shows right away.
