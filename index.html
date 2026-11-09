@@ -98,6 +98,16 @@ h1 span{color:var(--gold)}
   background:var(--panel);color:var(--chalk);border:1px solid var(--line)}
 .burger{display:inline-flex;flex-direction:column;gap:3px}.burger i{display:block;width:14px;height:2px;border-radius:1px;background:currentColor}
 .crumb{font-size:16px;font-weight:600;color:var(--muted);letter-spacing:.04em}
+.refresh-btn{margin-left:auto;font-family:var(--body);font-size:16px;font-weight:700;letter-spacing:.06em;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:6px;cursor:pointer;
+  background:var(--panel);color:var(--chalk);border:1px solid var(--line);touch-action:manipulation}
+.refresh-btn svg,.ptr svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.refresh-btn:hover{border-color:var(--gold)}
+.refresh-btn:focus-visible{outline:3px solid #5aa8ff;outline-offset:2px}
+.spinning svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ptr{position:fixed;left:50%;top:0;z-index:60;transform:translate(-50%,-60px);display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;
+  background:var(--panel);border:1px solid var(--gold);color:var(--chalk);font-weight:700;font-size:15px;box-shadow:0 6px 16px rgba(0,0,0,.4);pointer-events:none;opacity:0}
+.ptr.ready{background:var(--gold);color:#1b1405}
 .group{display:flex;flex-direction:column;gap:12px}
 .ghead{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--line);padding-bottom:8px}
 .ghead h2{font-family:var(--display);font-weight:400;font-size:26px;margin:0;letter-spacing:.02em}
@@ -145,7 +155,8 @@ h1 span{color:var(--gold)}
 </aside>
 <div class="scrim" id="scrim" hidden></div>
 <div class="wrap">
-  <div class="topbar"><button type="button" class="menu-btn" id="menuBtn" aria-controls="side" aria-expanded="false"><span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>MENU</button><span class="crumb" id="crumb">All games</span></div>
+  <div class="topbar"><button type="button" class="menu-btn" id="menuBtn" aria-controls="side" aria-expanded="false"><span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>MENU</button><span class="crumb" id="crumb">All games</span><button type="button" class="refresh-btn" id="refreshBtn" aria-label="Refresh the arcade"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>REFRESH</button></div>
+  <div class="ptr" id="ptr" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg><span>Pull to refresh</span></div>
   <header>
     <span class="eyebrow">Sports · Puzzles · Home games · Cards</span>
     <h1>Game Day <span>Arcade</span></h1>
@@ -479,6 +490,30 @@ GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const 
   document.querySelectorAll('.nav-item,.chip').forEach(n=>n.addEventListener('click',render));
   addEventListener('pageshow',()=>{try{favs=JSON.parse(localStorage.getItem(KEY)||'[]').filter(id=>valid.has(id))}catch(e){}render();});
   render();
+})();
+</script>
+<script>
+// Refresh: the installed app has no browser reload button, so the top bar has one, and you can pull down from the top of the page.
+// It checks for an updated version first, then reloads with a fresh copy of the page.
+(()=>{
+  const btn=document.getElementById('refreshBtn'),ptr=document.getElementById('ptr');
+  let busy=false;
+  async function refresh(){
+    if(busy)return;busy=true;btn.classList.add('spinning');ptr.classList.add('spinning');
+    try{const r=await navigator.serviceWorker?.getRegistration();if(r)await r.update();}catch(e){}
+    const u=new URL(location.href);u.searchParams.set('r',Date.now());location.replace(u.pathname+u.search+u.hash);
+  }
+  btn.addEventListener('click',refresh);
+  // pull to refresh
+  let y0=null,x0=0,pull=0;const NEED=80;
+  const set=(d)=>{pull=d;const k=Math.min(1,d/NEED);ptr.style.opacity=k;ptr.style.transform=`translate(-50%,${-60+Math.min(d,NEED+30)}px)`;
+    ptr.querySelector('svg').style.transform=`rotate(${d*3}deg)`;ptr.classList.toggle('ready',d>=NEED);ptr.querySelector('span').textContent=d>=NEED?'Release to refresh':'Pull to refresh';};
+  addEventListener('touchstart',e=>{if(busy||window.scrollY>0||document.querySelector('.side.open')||e.touches.length>1){y0=null;return;}y0=e.touches[0].clientY;x0=e.touches[0].clientX;},{passive:true});
+  addEventListener('touchmove',e=>{if(y0==null)return;const dy=e.touches[0].clientY-y0,dx=Math.abs(e.touches[0].clientX-x0);
+    if(dy<=0||dx>dy){if(pull)set(0);return;}if(window.scrollY>0){y0=null;set(0);return;}set(dy*.55);},{passive:true});
+  addEventListener('touchend',()=>{if(y0==null)return;y0=null;if(pull>=NEED){set(NEED);refresh();}else{ptr.style.transition='transform .2s,opacity .2s';set(0);setTimeout(()=>ptr.style.transition='',220);}});
+  // drop the ?r= marker from the address after a refresh
+  if(new URLSearchParams(location.search).has('r')){const u=new URL(location.href);u.searchParams.delete('r');history.replaceState(null,'',u.pathname+u.search+u.hash);}
 })();
 </script>
 <script>
