@@ -83,7 +83,7 @@ button.ghost{flex:0 0 30%;font-family:var(--body);font-size:16px;font-weight:700
 <div class="app">
   <a class="back" href="../../">‹ All games</a>
   <div class="bug" aria-live="polite">
-    <div><span class="lbl">Round</span><span class="val gold" id="rnd">1</span></div>
+    <div><span class="lbl">Level</span><span class="val gold" id="rnd">1</span></div>
     <div><span class="lbl">Tips</span><span class="val" id="tips">$0</span></div>
     <div><span class="lbl">Strikes</span><span class="strikes" id="strikes"><i></i><i></i><i></i></span></div>
     <div><span class="lbl">Best</span><span class="val" id="best">—</span></div>
@@ -97,7 +97,7 @@ button.ghost{flex:0 0 30%;font-family:var(--body);font-size:16px;font-weight:700
   <ul>
     <li><b>Orders</b><span>Each order shows the drink and what goes in it. Study them before the timer runs out, or tap I'M READY.</span></li>
     <li><b>Mix</b><span>The orders disappear. For each customer, tap the ingredients that go in their drink, then SERVE.</span></li>
-    <li><b>Rounds</b><span>Round 1 is one customer. Every round adds one more person at the bar.</span></li>
+    <li><b>Levels</b><span>Level 1 is one customer. Get every drink right and you move up: level 2 has two customers, level 3 has three, and so on. Miss one and you replay the level with new orders.</span></li>
     <li><b>The boss</b><span>1st wrong drink: a warning. 2nd: one more chance. 3rd: you're fired.</span></li>
   </ul>
   <p class="best" id="introBest" hidden></p>
@@ -186,7 +186,7 @@ const newFace=()=>({gx:0,gy:.2,blinkT:0,blinkAt:rnd(800,4000),mood:0,moodUntil:0
 const NUMCOL=['#e04f6d','#3f8fd6','#e2a019','#3fae6a','#9a5ad1','#e0702f','#1fa3a3','#c4466a'];
 
 /* ---------- state ---------- */
-const G={round:0,tips:0,strikes:0,served:0,correct:0,phase:'idle',cust:[],cur:-1,glass:[],boss:null,best:+store.get('bar-best')||0,walk:0};
+const G={round:0,level:1,tips:0,strikes:0,served:0,correct:0,phase:'idle',cust:[],cur:-1,glass:[],boss:null,best:+store.get('bar-best')||0,walk:0};
 
 /* ---------- layout + drawing ---------- */
 let W=0,H=0;
@@ -329,9 +329,9 @@ function updateFaces(dt){
 
 /* ---------- HUD ---------- */
 function hud(){
-  $('rnd').textContent=Math.max(1,G.round);$('tips').textContent='$'+G.tips;
+  $('rnd').textContent=G.level;$('tips').textContent='$'+G.tips;
   [...$('strikes').children].forEach((el,i)=>el.classList.toggle('on',i<G.strikes));
-  $('best').textContent=G.best?('Rd '+G.best):'—';
+  $('best').textContent=G.best?('Lv '+G.best):'—';
 }
 
 /* ---------- the station panel ---------- */
@@ -339,7 +339,7 @@ function chip(n){return `<span class="chip"><b style="background:${ING[n]}"></b>
 function showOrders(total){
   return new Promise(res=>{
     const rows=G.cust.map((c,i)=>`<div class="order"><span class="num" style="background:${NUMCOL[i%NUMCOL.length]}">${i+1}</span><div><div class="who">${esc(c.p.name)} wants</div><div class="drink">${esc(c.order.name)}</div><div class="chips">${c.order.ings.map(chip).join('')}</div></div></div>`).join('');
-    station.innerHTML=`<h2>Round ${G.round}: ${G.cust.length===1?'1 order':G.cust.length+' orders'}</h2><p>Remember who ordered what. The orders disappear when the timer runs out.</p>
+    station.innerHTML=`<h2>Level ${G.level}: ${G.cust.length===1?'1 order':G.cust.length+' orders'}</h2><p>Remember who ordered what. The orders disappear when the timer runs out.</p>
       <div class="timer"><i id="tbar"></i></div><div class="orders">${rows}</div>
       <div class="acts"><button class="big" id="ready" type="button">I'M READY</button></div>`;
     station.scrollTop=0;
@@ -408,12 +408,12 @@ async function bossScene(level){
   G.boss=null;
 }
 async function playRound(){
-  G.round++;G.phase='walk';hud();
-  const n=Math.min(G.round,8),people=shuffle(POOL).slice(0,n);
+  G.round++;G.phase='walk';hud();let missed=false;
+  const n=Math.min(G.level,8),people=shuffle(POOL).slice(0,n);
   let menu=shuffle(DRINKS);
   G.cust=people.map((p,i)=>({p,face:newFace(),order:menu[i%menu.length],drink:false,walk:0,leave:0,x:0}));
   G.cur=-1;
-  station.innerHTML=`<h2>Round ${G.round}</h2><p>${n===1?'A customer is walking up to the bar.':n+' customers are walking up to the bar.'}</p>`;
+  station.innerHTML=`<h2>Level ${G.level}</h2><p>${n===1?'A customer is walking up to the bar.':n+' customers are walking up to the bar.'}</p>`;
   sfx.bell();await walkIn();
   if(n<=4){for(const c of G.cust){G.cust.forEach(o=>o.say=null);c.say={text:'One '+c.order.name+', please.',until:clk+1100*FAST};await wait(n===1?900:650);}G.cust.forEach(o=>o.say=null);}
   else await wait(300);
@@ -427,35 +427,43 @@ async function playRound(){
     const ok=sameSet(made,c.order.ings);
     G.cust.forEach(o=>o.say=null);sfx.serve();c.drink=true;c.served={ings:made,glass:c.order.glass,color:mixColor(made)};G.served++;
     if(ok){
-      G.correct++;const tip=3+rint(4)+G.round;G.tips+=tip;sfx.good();
+      G.correct++;const tip=3+rint(4)+G.level;G.tips+=tip;sfx.good();
       c.face.mood=1;c.face.moodUntil=clk+3000;c.say={text:pick(GOOD_LINES)+' +$'+tip+' tip',until:clk+1400*FAST,tone:'good'};hud();
       await wait(900);
     }else{
       sfx.bad();c.face.mood=-1;c.face.moodUntil=clk+4000;
       c.say={text:pick(BAD_LINES)+' I asked for a '+c.order.name+'.',until:clk+2200*FAST,tone:'bad'};
-      G.strikes++;hud();await wait(1500);
+      G.strikes++;missed=true;hud();await wait(1500);
       await bossScene(G.strikes);
       if(G.strikes>=3){G.phase='over';return false;}
     }
   }
   G.cur=-1;G.phase='done';
-  if(G.round>G.best){G.best=G.round;store.set('bar-best',G.best);}
   hud();await wait(500);
-  await between(`Round ${G.round} done!`,`<p>Every drink is out. Tips so far: <b style="color:var(--gold)">$${G.tips}</b>. Next round adds one more customer${G.round+1>8?' (the bar is full at 8)':''}.</p>`,'NEXT ROUND');
+  if(!missed){
+    // every drink right: move up a level (one more customer, up to a full bar of 8)
+    const cleared=G.level;if(cleared>G.best){G.best=cleared;store.set('bar-best',G.best);}
+    G.level++;hud();sfx.bell();
+    const nx=Math.min(G.level,8);
+    await between(`Level ${cleared} cleared!`,`<p>Every drink was right. Tips so far: <b style="color:var(--gold)">$${G.tips}</b>.</p><p>Level ${G.level}: <b style="color:var(--chalk)">${nx} customers</b>${G.level>8?' (the bar is full, so it stays at 8)':''}.</p>`,'NEXT LEVEL');
+  }else{
+    // a wrong drink: same level again, same number of people, new orders
+    await between(`Level ${G.level} again`,`<p>Not every drink was right, so you stay on level ${G.level}. Same number of customers (${n}), new orders.</p><p>Tips so far: <b style="color:var(--gold)">$${G.tips}</b>.</p>`,'TRY AGAIN');
+  }
   await walkOut();
   return true;
 }
 async function runGame(){
-  G.round=0;G.tips=0;G.strikes=0;G.served=0;G.correct=0;G.cust=[];hud();
+  G.round=0;G.level=1;G.tips=0;G.strikes=0;G.served=0;G.correct=0;G.cust=[];hud();
   while(await playRound()){}
   // fired
-  const roundsDone=G.round-1;
+  const levelsDone=G.level-1;
   station.innerHTML=`<h2 style="color:var(--red)">You're fired!</h2><p>Here's how your shift went.</p>
-    <div class="stats"><div><span>Rounds finished</span><b>${roundsDone}</b></div><div><span>Drinks right</span><b>${G.correct} of ${G.served}</b></div>
-    <div><span>Tips earned</span><b>$${G.tips}</b></div><div><span>Best round</span><b>${G.best||'—'}</b></div></div>
+    <div class="stats"><div><span>Levels cleared</span><b>${levelsDone}</b></div><div><span>Drinks right</span><b>${G.correct} of ${G.served}</b></div>
+    <div><span>Tips earned</span><b>$${G.tips}</b></div><div><span>Best level</span><b>${G.best||'—'}</b></div></div>
     <div class="acts"><button class="big" id="again" type="button">NEW SHIFT</button></div>`;
   $('again').onclick=()=>{ac();G.cust=[];runGame();};
-  if(AUTO)window.__done={rounds:roundsDone,correct:G.correct,served:G.served,strikes:G.strikes};
+  if(AUTO)window.__done={levels:levelsDone,rounds:G.round,correct:G.correct,served:G.served,strikes:G.strikes};
 }
 
 /* ---------- loop ---------- */
@@ -475,7 +483,7 @@ function start(){
 }
 function closeIntro(){$('intro').hidden=true;store.set('bar-seen','1');ac();}
 $('introGo').addEventListener('click',closeIntro);
-if(G.best){$('introBest').textContent='Your best: round '+G.best;$('introBest').hidden=false;}
+if(G.best){$('introBest').textContent='Your best: level '+G.best+' cleared';$('introBest').hidden=false;}
 if(store.get('bar-seen')||AUTO)$('intro').hidden=true;
 resize();hud();start();requestAnimationFrame(frame);
 window.__bar=G;
