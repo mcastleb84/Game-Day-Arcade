@@ -102,6 +102,17 @@ h1 span{color:var(--gold)}
 .ghead{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--line);padding-bottom:8px}
 .ghead h2{font-family:var(--display);font-weight:400;font-size:26px;margin:0;letter-spacing:.02em}
 .ghead p{margin:0;font-size:16px;color:var(--muted);font-weight:500}
+.chips{position:sticky;top:0;z-index:20;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:10px 2px;margin:-6px 0 -8px;
+  background:#0c5a5c;box-shadow:0 8px 14px -8px rgba(0,0,0,.45);border-radius:0 0 10px 10px;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font-family:var(--body);font-size:17px;font-weight:700;letter-spacing:.03em;padding:8px 15px;border-radius:999px;cursor:pointer;
+  background:var(--panel);color:var(--chalk);border:1px solid var(--line);white-space:nowrap}
+.chip.subchip{font-weight:600;color:var(--muted);font-size:16px;padding:8px 13px}
+.chip[aria-current="page"]{background:var(--gold);color:#1b1405;border-color:var(--gold)}
+.chip:focus-visible{outline:3px solid #5aa8ff;outline-offset:2px}
+.sporthead{border-bottom:2px solid var(--gold);padding-bottom:6px}
+.sporthead h2{font-family:var(--display);font-weight:400;font-size:32px;margin:0;color:var(--gold);letter-spacing:.02em;text-shadow:0 2px 6px rgba(6,40,42,.75)}
+.sporthead p{margin:0;font-size:16px;color:var(--muted);font-weight:500}
 .ghead .kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:700}
 .nav-item.sub{padding:8px 12px 8px 30px;font-size:17px;grid-template-columns:22px 1fr auto}
 .nav-item.sub svg{width:20px;height:20px}
@@ -140,11 +151,15 @@ h1 span{color:var(--gold)}
     <h1>Game Day <span>Arcade</span></h1>
     <p class="lede">Pick a game and play. Your best scores are saved on this device.</p>
   </header>
+  <nav class="chips" aria-label="Sections"><button type="button" class="chip" data-cat="all"><span>All</span></button><button type="button" class="chip" data-cat="favorites"><span>★ Favorites</span></button><button type="button" class="chip" data-cat="sports"><span>Sports</span></button><button type="button" class="chip subchip" data-cat="football"><span>Football</span></button><button type="button" class="chip subchip" data-cat="soccer"><span>Soccer</span></button><button type="button" class="chip subchip" data-cat="tabletennis"><span>Table Tennis</span></button><button type="button" class="chip" data-cat="puzzles"><span>Puzzles</span></button><button type="button" class="chip" data-cat="home"><span>Home Games</span></button><button type="button" class="chip" data-cat="cards"><span>Card Games</span></button></nav>
 
   <section class="group" data-cat="favorites" aria-labelledby="h-favs" hidden>
     <div class="ghead"><h2 id="h-favs">Favorites</h2><p>Your starred games, saved on this device.</p></div>
     <div class="games" id="favGames"></div>
     <div class="soon" id="favEmpty" hidden><h3>No favorites yet</h3><p>Tap the star on any game to add it here.</p></div>
+  </section>
+  <section class="group sporthead" data-cat="sports-head" data-parent="sports" aria-labelledby="h-sportsall">
+    <h2 id="h-sportsall">Sports</h2><p>Football, soccer and table tennis.</p>
   </section>
   <section class="group" data-cat="football" data-parent="sports" aria-labelledby="h-football">
     <div class="ghead"><span class="kicker">Sports</span><h2 id="h-football">Football</h2><p>Long Bomb passing drills and the Last Bowl tournament.</p></div>
@@ -414,7 +429,7 @@ GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const 
 // Sidebar: pick a section to show only those games; "All games" shows every section. The choice is remembered.
 (()=>{
   const side=document.getElementById('side'),scrim=document.getElementById('scrim'),btn=document.getElementById('menuBtn');
-  const items=[...document.querySelectorAll('.nav-item')],groups=[...document.querySelectorAll('.group')];
+  const items=[...document.querySelectorAll('.nav-item,.chip')],groups=[...document.querySelectorAll('.group')];
   const wide=matchMedia('(min-width:980px)');
   function open(){side.classList.add('open');scrim.hidden=false;btn.setAttribute('aria-expanded','true');items.find(i=>i.getAttribute('aria-current'))?.focus();}
   function close(){side.classList.remove('open');scrim.hidden=true;btn.setAttribute('aria-expanded','false');}
@@ -425,7 +440,7 @@ GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const 
     document.getElementById('crumb').textContent=items.find(i=>i.dataset.cat===cat).querySelector('span').textContent;
     if(save){try{localStorage.setItem('arcade-section',cat)}catch(e){}history.replaceState(null,'',cat==='all'?location.pathname:'#'+cat);}
   }
-  items.forEach(i=>i.addEventListener('click',()=>{show(i.dataset.cat,true);if(!wide.matches)close();window.scrollTo({top:0});}));
+  items.forEach(i=>i.addEventListener('click',()=>{show(i.dataset.cat,true);if(!wide.matches)close();window.scrollTo({top:0});const c=document.querySelector('.chip[aria-current]');if(c)c.parentNode.scrollTo({left:c.offsetLeft-c.parentNode.clientWidth/2+c.offsetWidth/2,behavior:'smooth'});}));
   btn.addEventListener('click',open);scrim.addEventListener('click',close);document.getElementById('sideClose').addEventListener('click',()=>{close();btn.focus();});
   addEventListener('keydown',e=>{if(e.key==='Escape'&&side.classList.contains('open')){close();btn.focus();}});
   let start=location.hash.slice(1);if(!start){try{start=localStorage.getItem('arcade-section')||'all'}catch(e){start='all'}}
@@ -461,7 +476,7 @@ GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const 
     document.querySelectorAll('.nav-item').forEach(n=>{const b=n.querySelector('b'),c=n.dataset.cat;if(!b||b.textContent==='Soon')return;
       b.textContent=c==='favorites'?favs.length:c==='all'?cards.length:document.querySelectorAll('.group[data-cat="'+c+'"] .card, .group[data-parent="'+c+'"] .card').length;});
   }
-  document.querySelectorAll('.nav-item').forEach(n=>n.addEventListener('click',render));
+  document.querySelectorAll('.nav-item,.chip').forEach(n=>n.addEventListener('click',render));
   addEventListener('pageshow',()=>{try{favs=JSON.parse(localStorage.getItem(KEY)||'[]').filter(id=>valid.has(id))}catch(e){}render();});
   render();
 })();
