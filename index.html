@@ -112,17 +112,28 @@ h1 span{color:var(--gold)}
 .ghead{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--line);padding-bottom:8px}
 .ghead h2{font-family:var(--display);font-weight:400;font-size:26px;margin:0;letter-spacing:.02em}
 .ghead p{margin:0;font-size:16px;color:var(--muted);font-weight:500}
-.chips{position:sticky;top:0;z-index:20;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:10px 2px;margin:-6px 0 -8px;
+.chips{position:sticky;top:0;z-index:20;display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;padding:10px 2px;margin:-6px 0 -8px;
   background:#0c5a5c;box-shadow:0 8px 14px -8px rgba(0,0,0,.45);border-radius:0 0 10px 10px;-webkit-overflow-scrolling:touch}
 .chips::-webkit-scrollbar{display:none}
-.chip{flex:none;font-family:var(--body);font-size:17px;font-weight:700;letter-spacing:.03em;padding:8px 15px;border-radius:999px;cursor:pointer;
-  background:var(--panel);color:var(--chalk);border:1px solid var(--line);white-space:nowrap}
-.chip.subchip{font-weight:600;color:var(--muted);font-size:16px;padding:8px 13px}
-.chip[aria-current="page"]{background:var(--gold);color:#1b1405;border-color:var(--gold)}
-.chip:focus-visible{outline:3px solid #5aa8ff;outline-offset:2px}
+.chip{flex:none;font-family:var(--body);font-size:17px;font-weight:700;letter-spacing:.03em;padding:10px 12px 9px;cursor:pointer;
+  background:transparent;color:var(--muted);border:0;border-bottom:3px solid transparent;border-radius:6px 6px 0 0;white-space:nowrap}
+.chip.subchip{font-weight:600;font-size:16px}
+.chip:hover{color:var(--chalk)}
+.chip[aria-current="page"]{color:var(--gold);border-bottom-color:var(--gold);background:rgba(242,179,61,.1)}
+.chip:focus-visible{outline:3px solid #5aa8ff;outline-offset:-3px}
 .sporthead{border-bottom:2px solid var(--gold);padding-bottom:6px}
 .sporthead h2{font-family:var(--display);font-weight:400;font-size:32px;margin:0;color:var(--gold);letter-spacing:.02em;text-shadow:0 2px 6px rgba(6,40,42,.75)}
 .sporthead p{margin:0;font-size:16px;color:var(--muted);font-weight:500}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.tile{display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:12px;background:var(--panel);border:1px solid var(--line);color:var(--chalk);text-decoration:none;min-height:132px;position:relative}
+.tile:hover{border-color:var(--gold)}
+.tile:focus-visible{outline:3px solid #5aa8ff;outline-offset:2px}
+.tile svg{width:30px;height:30px;fill:none;stroke:var(--gold);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tile h3{margin:0;font-family:var(--display);font-weight:400;font-size:22px;line-height:1.05}
+.tile .n{font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.tile .g{font-size:15px;line-height:1.25;color:var(--muted);font-weight:500}
+.tile .go{position:absolute;right:12px;top:12px;font-size:22px;color:var(--muted)}
+.tile.sub{background:var(--panel2)}
 .ghead .kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:700}
 .nav-item.sub{padding:8px 12px 8px 30px;font-size:17px;grid-template-columns:22px 1fr auto}
 .nav-item.sub svg{width:20px;height:20px}
@@ -141,6 +152,7 @@ h1 span{color:var(--gold)}
 <aside class="side" id="side" aria-label="Game sections">
   <div class="side-top"><span class="side-title">Game Day <span>Arcade</span></span><button type="button" class="side-close" id="sideClose" aria-label="Close menu">×</button></div>
   <nav class="nav">
+    <button type="button" class="nav-item" data-cat="start"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11.5L12 4l8.5 7.5"/><path d="M6 10v10h4.5v-6h3v6H18V10"/></svg><span>Home</span></button>
     <button type="button" class="nav-item" data-cat="all" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg><span>All games</span><b>6</b></button>
     <button type="button" class="nav-item" data-cat="favorites"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg><span>Favorites</span><b>0</b></button>
     <button type="button" class="nav-item" data-cat="sports"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="9.5" ry="6" transform="rotate(-35 12 12)"/><path d="M9 15l6-6M10.5 11.5l2 2M12 10l2 2M9 13l2 2" /></svg><span>Sports</span><b>3</b></button>
@@ -162,8 +174,12 @@ h1 span{color:var(--gold)}
     <h1>Game Day <span>Arcade</span></h1>
     <p class="lede">Pick a game and play. Your best scores are saved on this device.</p>
   </header>
-  <nav class="chips" aria-label="Sections"><button type="button" class="chip" data-cat="all"><span>All</span></button><button type="button" class="chip" data-cat="favorites"><span>★ Favorites</span></button><button type="button" class="chip" data-cat="sports"><span>Sports</span></button><button type="button" class="chip subchip" data-cat="football"><span>Football</span></button><button type="button" class="chip subchip" data-cat="soccer"><span>Soccer</span></button><button type="button" class="chip subchip" data-cat="tabletennis"><span>Table Tennis</span></button><button type="button" class="chip" data-cat="puzzles"><span>Puzzles</span></button><button type="button" class="chip" data-cat="home"><span>Home Games</span></button><button type="button" class="chip" data-cat="cards"><span>Card Games</span></button></nav>
+  <nav class="chips" aria-label="Sections"><button type="button" class="chip" data-cat="start"><span>Home</span></button><button type="button" class="chip" data-cat="all"><span>All games</span></button><button type="button" class="chip" data-cat="favorites"><span>★ Favorites</span></button><button type="button" class="chip" data-cat="sports"><span>Sports</span></button><button type="button" class="chip subchip" data-cat="football"><span>Football</span></button><button type="button" class="chip subchip" data-cat="soccer"><span>Soccer</span></button><button type="button" class="chip subchip" data-cat="tabletennis"><span>Table Tennis</span></button><button type="button" class="chip" data-cat="puzzles"><span>Puzzles</span></button><button type="button" class="chip" data-cat="home"><span>Home Games</span></button><button type="button" class="chip" data-cat="cards"><span>Card Games</span></button></nav>
 
+  <section class="group" data-cat="start" aria-labelledby="h-start">
+    <div class="ghead"><h2 id="h-start">Sections</h2><p>Tap a section to open it in its own tab.</p></div>
+    <div class="tiles" id="tiles"></div>
+  </section>
   <section class="group" data-cat="favorites" aria-labelledby="h-favs" hidden>
     <div class="ghead"><h2 id="h-favs">Favorites</h2><p>Your starred games, saved on this device.</p></div>
     <div class="games" id="favGames"></div>
@@ -445,17 +461,19 @@ GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const 
   function open(){side.classList.add('open');scrim.hidden=false;btn.setAttribute('aria-expanded','true');items.find(i=>i.getAttribute('aria-current'))?.focus();}
   function close(){side.classList.remove('open');scrim.hidden=true;btn.setAttribute('aria-expanded','false');}
   function show(cat,save){
-    if(!items.some(i=>i.dataset.cat===cat))cat='all';
+    if(!items.some(i=>i.dataset.cat===cat))cat='start';
     items.forEach(i=>{if(i.dataset.cat===cat)i.setAttribute('aria-current','page');else i.removeAttribute('aria-current');});
-    groups.forEach(g=>g.hidden=!(cat==='all'||g.dataset.cat===cat||g.dataset.parent===cat));
+    groups.forEach(g=>g.hidden=g.dataset.cat==='start'?cat!=='start':!(cat==='all'||g.dataset.cat===cat||g.dataset.parent===cat));
     document.getElementById('crumb').textContent=items.find(i=>i.dataset.cat===cat).querySelector('span').textContent;
-    if(save){try{localStorage.setItem('arcade-section',cat)}catch(e){}history.replaceState(null,'',cat==='all'?location.pathname:'#'+cat);}
+    if(save){const url=cat==='start'?location.pathname:'#'+cat;if(url!==(location.hash||location.pathname))history.pushState(null,'',url);}
+    dispatchEvent(new Event('arcade-section'));
   }
   items.forEach(i=>i.addEventListener('click',()=>{show(i.dataset.cat,true);if(!wide.matches)close();window.scrollTo({top:0});const c=document.querySelector('.chip[aria-current]');if(c)c.parentNode.scrollTo({left:c.offsetLeft-c.parentNode.clientWidth/2+c.offsetWidth/2,behavior:'smooth'});}));
   btn.addEventListener('click',open);scrim.addEventListener('click',close);document.getElementById('sideClose').addEventListener('click',()=>{close();btn.focus();});
   addEventListener('keydown',e=>{if(e.key==='Escape'&&side.classList.contains('open')){close();btn.focus();}});
-  let start=location.hash.slice(1);if(!start){try{start=localStorage.getItem('arcade-section')||'all'}catch(e){start='all'}}
-  show(start,false);
+  const fromUrl=()=>{show(location.hash.slice(1)||'start',false);window.scrollTo({top:0});};
+  addEventListener('popstate',fromUrl);addEventListener('hashchange',fromUrl);
+  show(location.hash.slice(1)||'start',false);
 })();
 </script>
 
@@ -487,9 +505,33 @@ GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const 
     document.querySelectorAll('.nav-item').forEach(n=>{const b=n.querySelector('b'),c=n.dataset.cat;if(!b||b.textContent==='Soon')return;
       b.textContent=c==='favorites'?favs.length:c==='all'?cards.length:document.querySelectorAll('.group[data-cat="'+c+'"] .card, .group[data-parent="'+c+'"] .card').length;});
   }
-  document.querySelectorAll('.nav-item,.chip').forEach(n=>n.addEventListener('click',render));
+  addEventListener('arcade-section',render);
   addEventListener('pageshow',()=>{try{favs=JSON.parse(localStorage.getItem(KEY)||'[]').filter(id=>valid.has(id))}catch(e){}render();});
   render();
+})();
+</script>
+<script>
+// Home tab: one tile per section, each a link to that section's tab (e.g. #football).
+(()=>{
+  const el=document.getElementById('tiles');
+  const SECTIONS=[['favorites','Your starred games'],['all','Every game in the arcade'],['sports',''],['football','',1],['soccer','',1],['tabletennis','',1],['puzzles',''],['home',''],['cards','']];
+  function build(){
+    el.innerHTML='';
+    SECTIONS.forEach(([cat,blurb,sub])=>{
+      const nav=document.querySelector('.nav-item[data-cat="'+cat+'"]');if(!nav)return;
+      const sel=cat==='all'?'.group:not([data-cat="favorites"]):not([data-cat="start"]) .card':cat==='favorites'?'#favGames .card':'.group[data-cat="'+cat+'"] .card, .group[data-parent="'+cat+'"] .card';
+      const cards=[...document.querySelectorAll(sel)];
+      if(cat==='favorites'&&!cards.length)return;
+      const names=cards.map(c=>c.querySelector('h2').textContent.trim());
+      const a=document.createElement('a');a.className='tile'+(sub?' sub':'');a.href='#'+cat;
+      a.innerHTML=nav.querySelector('svg').outerHTML+'<span class="go" aria-hidden="true">›</span><h3></h3><span class="n"></span><span class="g"></span>';
+      a.querySelector('h3').textContent=nav.querySelector('span').textContent;
+      a.querySelector('.n').textContent=cards.length+(cards.length===1?' game':' games');
+      a.querySelector('.g').textContent=blurb||names.join(' · ');
+      el.appendChild(a);
+    });
+  }
+  build();addEventListener('arcade-section',build);
 })();
 </script>
 <script>
