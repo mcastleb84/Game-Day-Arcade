@@ -1037,6 +1037,24 @@ camY=G.ballOn-(H/s)*.22;
 if(titles){$('introBest').textContent='Last Bowl titles won: '+titles;$('introBest').hidden=false;}
 if(store.get('lbw-seen')){$('intro').hidden=true;showPanel();}
 requestAnimationFrame(frame);
+// Save / continue: the bracket already saves after every game; this also keeps the game in progress (score, drive, down).
+window.GD_SAVE={
+  get(){
+    if(!M.on||!T||T.status!=='active')return null;
+    return {round:T.round,my:M.my,op:M.op,drives:M.drives,ballOn:G.ballOn,down:G.down,firstLine:G.firstLine,driveEnd:!!G.driveEnd||G.phase==='celebrate'};
+  },
+  describe(d){const o=T&&T.status==='active'?oppTeam():null;return ROUNDS[d.round]+(o?' vs the '+o.name:'')+' · you '+d.my+', them '+d.op;},
+  load(d){
+    if(!T||T.status!=='active'||d.round!==T.round)return;
+    $('panel').hidden=true;$('intro').hidden=true;$('banner').hidden=true;
+    M.opp=oppTeam();M.my=d.my;M.op=d.op;M.drives=d.drives;M.on=true;
+    if(d.driveEnd){G.driveEnd=false;if(decided()){endMatch();return;}startDrive();return;}
+    M.poss=M.drives%2===0?'me':'cpu';
+    G.ballOn=d.ballOn;G.down=d.down;G.firstLine=d.firstLine;G.driveEnd=false;G.phase='pre';setup();hud();
+    camY=G.ballOn-(H/s)*.22;
+    flash('WELCOME BACK',(M.poss==='me'?'Your ball, ':'You\'re on defense, ')+ord(G.down)+' down. First to '+WIN_SCORE+' wins.','',1.8);
+  }
+};
 })();
 </script>
 

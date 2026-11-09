@@ -735,6 +735,18 @@ function closeIntro(){$('intro').hidden=true;ac();G.clock=25;$('btn').focus();}
 $('introGo').addEventListener('click',closeIntro);
 if(best){$('introBest').textContent='Your best score: '+best;$('introBest').hidden=false;}
 requestAnimationFrame(frame);
+// Save / continue: resumes at the start of the current down.
+window.GD_SAVE={
+  get(){
+    if(G.phase==='over')return null;
+    const td=G.phase==='celebrate';
+    const d={ballOn:td?25:G.ballOn,down:td?1:G.down,firstLine:td?35:G.firstLine,score:G.score,tds:G.tds,extraOL:G.extraOL};
+    if(!d.score&&!d.tds&&d.ballOn===25&&d.down===1)return null;
+    return d;
+  },
+  describe(d){return 'Score '+d.score+' · level '+Math.min(15,1+d.tds)+' · '+ord(d.down)+' down';},
+  load(d){Object.assign(G,d);G.celeb=null;G.phase='pre';$('banner').hidden=true;$('intro').hidden=true;setup();G.clock=25;hud();camY=G.ballOn-(H/s)*.22;}
+};
 })();
 </script>
 

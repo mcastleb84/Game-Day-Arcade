@@ -322,6 +322,21 @@ function draw(dt){
 let last=performance.now();
 function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!window.GD_PAUSED)step(dt);draw(dt);requestAnimationFrame(frame);}
 resize();board();controls();requestAnimationFrame(frame);
+// Save / continue: keeps the level and the score of the game in progress.
+window.GD_SAVE={
+  get(){
+    if(phase==='lost')return null;
+    if(phase==='ready'&&lv===1&&!wins)return null;
+    const fresh=phase==='ready'||phase==='won';
+    return {lv,wins,ps:fresh?0:ps,cs:fresh?0:cs,fresh};
+  },
+  describe(d){return 'Level '+d.lv+(d.fresh?'':' · you '+d.ps+', CPU '+d.cs);},
+  load(d){
+    lv=d.lv;wins=d.wins;$('intro').hidden=true;hideBanner();
+    if(d.fresh){phase='ready';board();controls();return;}
+    const p=P();me.w=p.meW;cpu.w=p.cpuW;cpu.x=TW/2;ps=d.ps;cs=d.cs;board();toServe();
+  }
+};
 })();
 </script>
 <script src="../../menu.js"></script>

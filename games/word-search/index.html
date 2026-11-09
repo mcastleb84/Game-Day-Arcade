@@ -251,6 +251,16 @@ cv.addEventListener('pointercancel',e=>{if(sel&&e.pointerId===sel.id){sel=null;d
 $('introGo').addEventListener('click',()=>{$('intro').hidden=true;tone(0.0001,.01);});
 newPuzzle();
 addEventListener('gd-pause',()=>{pAt=performance.now();});addEventListener('gd-resume',()=>{if(pAt)t0+=performance.now()-pAt;pAt=0;});
+// Save / continue: keeps this exact puzzle, the words you've found and your time.
+window.GD_SAVE={
+  get(){if(!P||done)return null;return {lv,theme,P,elapsed:(performance.now()-t0)/1000};},
+  describe(d){const f=d.P.words.filter(w=>w.found).length;return d.theme+' · level '+d.lv+' · '+f+' of '+d.P.words.length+' words found';},
+  load(d){
+    lv=d.lv;theme=d.theme;P=d.P;done=false;sel=null;t0=performance.now()-d.elapsed*1000;
+    const i=$('intro');if(i)i.hidden=true;$('banner').hidden=true;$('btn').disabled=true;$('btn').textContent='FIND ALL THE WORDS';
+    hud();list();resize();clearInterval(tick);tick=setInterval(hud,1000);
+  }
+};
 })();
 </script>
 <script src="../../menu.js"></script>

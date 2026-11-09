@@ -453,8 +453,10 @@ async function playRound(){
   await walkOut();
   return true;
 }
-async function runGame(){
-  G.round=0;G.level=1;G.tips=0;G.strikes=0;G.served=0;G.correct=0;G.cust=[];hud();
+async function runGame(resume){
+  G.round=0;G.level=1;G.tips=0;G.strikes=0;G.served=0;G.correct=0;G.cust=[];
+  if(resume){G.round=resume.round;G.level=resume.level;G.tips=resume.tips;G.strikes=resume.strikes;G.served=resume.served;G.correct=resume.correct;}
+  hud();
   while(await playRound()){}
   // fired
   const levelsDone=G.level-1;
@@ -487,6 +489,12 @@ if(G.best){$('introBest').textContent='Your best: level '+G.best+' cleared';$('i
 if(store.get('bar-seen')||AUTO)$('intro').hidden=true;
 resize();hud();start();requestAnimationFrame(frame);
 window.__bar=G;
+// Save / continue: keeps your level, tips and strikes; you pick up with fresh customers on that level.
+window.GD_SAVE={
+  get(){if(G.phase==='over'||G.phase==='idle'||!G.round)return null;return {level:G.level,tips:G.tips,strikes:G.strikes,served:G.served,correct:G.correct,round:G.round};},
+  describe(d){return 'Level '+d.level+' · $'+d.tips+' in tips · '+d.strikes+(d.strikes===1?' strike':' strikes');},
+  load(d){$('intro').hidden=true;G.cust=[];runGame(d);}
+};
 })();
 </script>
 <script src="../../menu.js"></script>

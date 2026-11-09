@@ -515,6 +515,16 @@ const click=()=>tone(900,.03);
 
 if(/[?&]test\b/.test(location.search))window.__cw={makePuzzle,get Z(){return Z},type,tap};
 newPuzzle();
+// Save / continue: keeps this exact puzzle, every letter you've typed and your time.
+window.GD_SAVE={
+  get(){if(!Z||done)return null;if(!user.some(r=>r.some(Boolean)))return null;return {lv,Z,user,bad:[...bad],rev:[...rev],cx,cy,dir,elapsed:(performance.now()-t0)/1000};},
+  describe(d){let f=0,t=0;d.Z.sol.forEach((r,y)=>r.forEach((c,x)=>{if(c){t++;if(d.user[y][x])f++;}}));return 'Level '+d.lv+' · '+f+' of '+t+' squares filled';},
+  load(d){
+    lv=d.lv;Z=d.Z;user=d.user;bad=new Set(d.bad);rev=new Set(d.rev);cx=d.cx;cy=d.cy;dir=d.dir;done=false;started=true;
+    t0=performance.now()-d.elapsed*1000;$('intro').hidden=true;$('lv').textContent=lv;$('banner').hidden=true;$('kb').hidden=false;$('nextP').hidden=true;$('tools').style.visibility='';
+    buildGrid();layout();render();
+  }
+};
 })();
 </script>
 <script src="../../menu.js"></script>

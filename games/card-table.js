@@ -819,9 +819,13 @@ function gameWinner(){
   if(a<=low&&b>low)return 1;if(b<=low&&a>low)return 0;
   return null;
 }
-async function runGame(){
+async function runGame(resume){
   S.scores=[0,0];S.bags=[0,0];S.hand=0;S.over=false;choosePeople();resize();
-  say(1,pick(['Let\'s play.','Shuffle up!','Deal \'em.']),1600);
+  if(resume){
+    S.scores=resume.scores.slice();S.bags=resume.bags.slice();S.target=resume.target;S.hand=resume.completed;S.dealer=(resume.nextDealer+3)%4;
+    const byName=n=>PEOPLE.find(p=>p.name===n);if(resume.people&&resume.people.every(byName))seatPeople=[null,...resume.people.map(byName)];
+  }
+  say(1,resume?pick(['Welcome back.','Where were we?','Let\'s pick it up.']):pick(['Let\'s play.','Shuffle up!','Deal \'em.']),1600);
   while(true){
     S.hand++;S.dealer=(S.dealer+1)%4;
     const res=GAME==='whist'?await handWhist():await handSpades();
@@ -911,4 +915,15 @@ if(store.get(KEY+'-seen')||AUTO)$('intro').hidden=true;
 startGame();
 requestAnimationFrame(frame);
 window.__cards=S;
+// Save / continue: keeps the score, bags and who deals. A hand that was in progress is dealt again.
+window.GD_SAVE={
+  get(){
+    if(!S.hand||S.over)return null;
+    const done=S.phase==='done';
+    if(done&&gameWinner()!=null)return null;
+    return {scores:S.scores.slice(),bags:S.bags.slice(),target:S.target,completed:done?S.hand:S.hand-1,nextDealer:done?(S.dealer+1)%4:S.dealer,people:seatPeople.slice(1).map(p=>p.name)};
+  },
+  describe(d){return 'Hand '+(d.completed+1)+' · you '+d.scores[0]+', them '+d.scores[1]+' · game to '+d.target;},
+  load(d){$('intro').hidden=true;const p=$('panel');p.onclick=null;p.hidden=true;hideBox();runGame(d);}
+};
 })();

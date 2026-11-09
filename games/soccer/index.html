@@ -182,7 +182,8 @@ function setupAttempt(){
   ball={x:me.x,y:me.y-PR-BR,vx:0,vy:0,owner:me,kind:null,from:null};
   clock=CLOCK;net=0;
 }
-function startLevel(){results=[];setupAttempt();phase='play';hideBanner();hud();controls();sfx.whistle();}
+let keepResults=false;
+function startLevel(){if(!keepResults)results=[];keepResults=false;setupAttempt();phase='play';hideBanner();hud();controls();sfx.whistle();}
 function endAttempt(scored,title,text){
   if(phase!=='play'&&phase!=='shot')return;
   results.push(scored);phase='result';
@@ -530,6 +531,16 @@ if(/[?&]test\b/.test(location.search))window.__sc={
     shoot();for(let i=0;i<300&&phase==='shot';i++)update(1/60);const r=results[0];phase='ready';hideBanner();return r;}
 };
 resize();setupAttempt();hud();controls();requestAnimationFrame(frame);
+// Save / continue: keeps the level and the shots already taken on it.
+window.GD_SAVE={
+  get(){
+    if(phase==='lost')return null;
+    if(phase==='ready'&&lv===1&&!results.length)return null;
+    return {lv,results:phase==='won'?[]:results.slice()};
+  },
+  describe(d){return 'Level '+d.lv+(d.results.length?' · '+d.results.filter(Boolean).length+' of '+d.results.length+' shots scored':'');},
+  load(d){lv=d.lv;results=d.results||[];keepResults=true;phase='ready';setupAttempt();hideBanner();$('intro').hidden=true;hud();controls();}
+};
 })();
 </script>
 <script src="../../menu.js"></script>

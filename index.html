@@ -62,6 +62,10 @@ h1 span{color:var(--gold)}
 .soon h3{margin:0;font-family:var(--display);font-weight:400;font-size:20px;color:var(--chalk)}
 .soon p{margin:0;font-size:16px;color:var(--muted);line-height:1.3}
 
+/* Saved-game tag: top-left of a card whose game has a save. */
+.saved-tag{position:absolute;top:10px;left:10px;z-index:2;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;border-radius:999px;
+  background:var(--gold);color:#1b1405;box-shadow:0 3px 10px rgba(0,0,0,.35);pointer-events:none}
+.saved-note{font-size:14px;color:var(--gold);font-weight:600;margin:-2px 0 0;line-height:1.25}
 /* Favorite star: top-right of each game card. */
 .fav{position:absolute;top:8px;right:8px;z-index:2;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;cursor:pointer;
   background:rgba(8,40,42,.82);border:1px solid rgba(243,239,228,.35);color:var(--chalk);padding:0;touch-action:manipulation}
@@ -536,6 +540,27 @@ GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const 
   addEventListener('arcade-section',render);
   addEventListener('pageshow',()=>{try{favs=JSON.parse(localStorage.getItem(KEY)||'[]').filter(id=>valid.has(id))}catch(e){}render();});
   render();
+})();
+</script>
+<script>
+// Saved games: games that were saved show a SAVED tag, what was saved, and CONTINUE instead of PLAY.
+(()=>{
+  const idOf=c=>((c.querySelector('a.play')||{}).getAttribute?.('href')||'').match(/games\/([^/]+)\//)?.[1];
+  function mark(){
+    document.querySelectorAll('.card').forEach(c=>{
+      const id=idOf(c);if(!id)return;
+      let rec=null;try{rec=JSON.parse(localStorage.getItem('save-'+id)||'null')}catch(e){}
+      c.querySelector('.saved-tag')?.remove();c.querySelector('.saved-note')?.remove();
+      const play=c.querySelector('a.play');
+      if(rec&&rec.data!=null){
+        const t=document.createElement('span');t.className='saved-tag';t.textContent='Saved game';c.appendChild(t);
+        if(rec.desc){const n=document.createElement('p');n.className='saved-note';n.textContent='Saved: '+rec.desc;c.querySelector('.info p').after(n);}
+        play.textContent='CONTINUE';
+      }else play.textContent='PLAY';
+    });
+  }
+  mark();addEventListener('arcade-section',mark);addEventListener('pageshow',mark);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)mark();});
 })();
 </script>
 <script>

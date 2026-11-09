@@ -438,6 +438,26 @@ if(/[?&]test\b/.test(location.search)){
 }
 
 resize();board();controls();requestAnimationFrame(frame);
+// Save / continue: keeps the level, which cups are still standing and whose turn it is.
+window.GD_SAVE={
+  get(){
+    if(phase==='lost')return null;
+    if(phase==='ready'&&lv===1&&!wins)return null;
+    if(phase==='ready'||phase==='won'||!cups.length)return {lv,wins,fresh:true};
+    return {lv,wins,cups:cups.filter(c=>!c.hit).map(c=>({x:c.x,z:c.z,side:c.side})),racked,shooter};
+  },
+  describe(d){
+    if(d.fresh)return 'Level '+d.lv;
+    const mine=d.cups.filter(c=>c.side==='me').length,theirs=d.cups.filter(c=>c.side==='cpu').length;
+    return 'Level '+d.lv+' · your cups '+mine+', CPU cups '+theirs+' · '+(d.shooter==='me'?'your turn':"CPU's turn");
+  },
+  load(d){
+    lv=d.lv;wins=d.wins;$('intro').hidden=true;hideBanner();
+    if(d.fresh){phase='ready';board();controls();return;}
+    cups=d.cups.map(c=>({...c,hit:false,t:0}));racked=d.racked||{me:{},cpu:{}};shooter=d.shooter;
+    balls=2;hits=0;ball=null;lastMark=null;drops=[];sinkAnim=null;board();beginTurn();
+  }
+};
 })();
 </script>
 <script src="../../menu.js"></script>
