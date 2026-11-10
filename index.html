@@ -166,6 +166,7 @@ h1 span{color:var(--gold)}
     <button type="button" class="nav-item" data-cat="puzzles"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3.5a2 2 0 1 1 4 0H15v3.5a2 2 0 1 1 0 4V19H4z"/></svg><span>Puzzles</span><b>2</b></button>
     <button type="button" class="nav-item" data-cat="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11L12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/></svg><span>Home Games</span><b>1</b></button>
     <button type="button" class="nav-item" data-cat="cards"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="10" height="14" rx="1.5" transform="rotate(-10 8 13)"/><rect x="10" y="4" width="10" height="14" rx="1.5" transform="rotate(8 15 11)"/></svg><span>Card Games</span><b>2</b></button>
+    <button type="button" class="nav-item" data-cat="action"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><path d="M12 2.5v5M12 16.5v5M2.5 12h5M16.5 12h5"/><circle cx="12" cy="12" r="1.2"/></svg><span>Action</span><b>1</b></button>
   </nav>
   <p class="side-foot">Best scores are saved on this device.</p>
 </aside>
@@ -174,11 +175,11 @@ h1 span{color:var(--gold)}
   <div class="topbar"><button type="button" class="menu-btn" id="menuBtn" aria-controls="side" aria-expanded="false"><span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>MENU</button><span class="crumb" id="crumb">All games</span><button type="button" class="refresh-btn" id="refreshBtn" aria-label="Refresh the arcade"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>REFRESH</button></div>
   <div class="ptr" id="ptr" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg><span>Pull to refresh</span></div>
   <header>
-    <span class="eyebrow">Sports · Puzzles · Home games · Cards</span>
+    <span class="eyebrow">Sports · Puzzles · Home games · Cards · Action</span>
     <h1>Game Day <span>Arcade</span></h1>
     <p class="lede">Pick a game and play. Your best scores are saved on this device.</p>
   </header>
-  <nav class="chips" aria-label="Sections"><button type="button" class="chip" data-cat="start"><span>Home</span></button><button type="button" class="chip" data-cat="all"><span>All games</span></button><button type="button" class="chip" data-cat="favorites"><span>★ Favorites</span></button><button type="button" class="chip" data-cat="sports"><span>Sports</span></button><button type="button" class="chip subchip" data-cat="football"><span>Football</span></button><button type="button" class="chip subchip" data-cat="soccer"><span>Soccer</span></button><button type="button" class="chip subchip" data-cat="tabletennis"><span>Table Tennis</span></button><button type="button" class="chip" data-cat="puzzles"><span>Puzzles</span></button><button type="button" class="chip" data-cat="home"><span>Home Games</span></button><button type="button" class="chip" data-cat="cards"><span>Card Games</span></button></nav>
+  <nav class="chips" aria-label="Sections"><button type="button" class="chip" data-cat="start"><span>Home</span></button><button type="button" class="chip" data-cat="all"><span>All games</span></button><button type="button" class="chip" data-cat="favorites"><span>★ Favorites</span></button><button type="button" class="chip" data-cat="sports"><span>Sports</span></button><button type="button" class="chip subchip" data-cat="football"><span>Football</span></button><button type="button" class="chip subchip" data-cat="soccer"><span>Soccer</span></button><button type="button" class="chip subchip" data-cat="tabletennis"><span>Table Tennis</span></button><button type="button" class="chip" data-cat="puzzles"><span>Puzzles</span></button><button type="button" class="chip" data-cat="home"><span>Home Games</span></button><button type="button" class="chip" data-cat="cards"><span>Card Games</span></button><button type="button" class="chip" data-cat="action"><span>Action</span></button></nav>
 
   <section class="group" data-cat="start" aria-labelledby="h-start">
     <div class="ghead"><h2 id="h-start">Sections</h2><p>Tap a section to open it in its own tab.</p></div>
@@ -475,12 +476,45 @@ h1 span{color:var(--gold)}
     </article>
     </div>
   </section>
+  <section class="group" data-cat="action" aria-labelledby="h-action">
+    <div class="ghead"><h2 id="h-action">Action</h2><p>First-person shooters.</p></div>
+    <div class="games">
+    <article class="card">
+      <a class="art" href="games/home-invasion/index.html" aria-label="Play Home Invasion">
+        <svg viewBox="0 0 320 180" role="img" aria-label="First-person view down a dark hallway with a handgun raised at an intruder and a zombie">
+          <rect width="320" height="180" fill="#14110f"/>
+          <polygon points="0,0 120,52 120,122 0,180" fill="#5a3d2a"/><polygon points="320,0 200,52 200,122 320,180" fill="#4d3423"/>
+          <polygon points="0,0 320,0 200,52 120,52" fill="#2a2420"/><polygon points="0,180 120,122 200,122 320,180" fill="#3a2a1e"/>
+          <rect x="120" y="52" width="80" height="70" fill="#1c2a40"/><rect x="146" y="64" width="28" height="58" fill="#6b4423"/><circle cx="168" cy="94" r="2" fill="#d4b25a"/>
+          <g fill="none" stroke="#2a1d14" stroke-width="2"><path d="M30 14v150M70 32v112"/><path d="M290 14v150M250 32v112"/></g>
+          <g transform="translate(108 76)"><rect x="-9" y="36" width="7" height="22" rx="2" fill="#23304a"/><rect x="2" y="36" width="7" height="22" rx="2" fill="#23304a"/><rect x="-12" y="8" width="24" height="30" rx="5" fill="#2b2f36"/><ellipse cy="0" rx="8" ry="9" fill="#8d5a3b"/><path d="M-8 -3a8 9 0 0 1 16 0z" fill="#1a1a1a"/><rect x="-16" y="16" width="26" height="5" rx="1" fill="#202226" transform="rotate(-25 0 18)"/></g>
+          <g transform="translate(222 82)"><rect x="-8" y="32" width="7" height="20" rx="2" fill="#3d3a33"/><rect x="2" y="32" width="7" height="20" rx="2" fill="#3d3a33"/><rect x="-11" y="6" width="22" height="28" rx="5" fill="#4a3a2a"/><ellipse cy="0" rx="7.5" ry="8.5" fill="#86a36c"/><circle cx="-3" cy="-1" r="1.6" fill="#e6df9a"/><circle cx="3" cy="-1" r="1.6" fill="#e6df9a"/><ellipse cy="5" rx="2.5" ry="1.8" fill="#3a0d0d"/><path d="M-11 10l-8 6M11 10l8 6" stroke="#86a36c" stroke-width="5" stroke-linecap="round"/></g>
+          <g transform="translate(160 90)" fill="none" stroke="#f3efe4" stroke-width="2"><path d="M-12 0h7M5 0h7M0 -12v7M0 5v7"/></g>
+          <polygon points="268,180 236,120 252,112 320,150 320,180" fill="#2b3a4a"/>
+          <polygon points="196,104 236,104 242,92 200,92" fill="#3c4047"/><rect x="196" y="104" width="40" height="26" rx="4" fill="#1a1c1f"/><rect x="214" y="85" width="4" height="8" fill="#e8e2d0"/>
+          <rect x="196" y="126" width="46" height="40" rx="14" fill="#a8734e"/><path d="M202 138h32M202 148h32M202 158h30" stroke="#6b3f22" stroke-opacity=".5" stroke-width="2"/><rect x="190" y="118" width="22" height="34" rx="10" fill="#9a6743"/>
+          <polygon points="60,180 110,124 150,130 120,180" fill="#2b3a4a"/>
+          <text x="16" y="168" font-family="Graduate, Georgia, serif" font-size="17" fill="#f2b33d">HOME INVASION</text>
+        </svg>
+      </a>
+      <div class="info">
+        <span class="tag">Action · First person</span>
+        <h2>Home Invasion</h2>
+        <p>Invaders kick in your doors. Two body shots turn them into zombies, a head shot drops them. Grab their guns and survive every level.</p>
+        <div class="meta">
+          <span class="best">Best level <b id="best-hi">–</b></span>
+          <a class="play" href="games/home-invasion/index.html">PLAY</a>
+        </div>
+      </div>
+    </article>
+    </div>
+  </section>
 </div>
 </div>
 
 <script>
 // Each game saves its own best score in this browser; the lobby reads it to show on the card.
-const GAMES=[{id:'best-bar',key:'bar-best',none:'–'},{id:'best-sp',key:'sp-wins',none:'0'},{id:'best-bw',key:'bw-wins',none:'0'},{id:'best-lb',key:'lb-best',none:'0'},{id:'best-lbw',key:'lbw-titles',none:'0'},{id:'best-pp',key:'pp-best',none:'–'},{id:'best-bp',key:'bp-best',none:'–'},{id:'best-sc',key:'sc-best',none:'–'},{id:'best-ws',key:'ws-solved',none:'0'},{id:'best-cw',key:'cw-solved',none:'0'}];
+const GAMES=[{id:'best-hi',key:'hi-best',none:'–'},{id:'best-bar',key:'bar-best',none:'–'},{id:'best-sp',key:'sp-wins',none:'0'},{id:'best-bw',key:'bw-wins',none:'0'},{id:'best-lb',key:'lb-best',none:'0'},{id:'best-lbw',key:'lbw-titles',none:'0'},{id:'best-pp',key:'pp-best',none:'–'},{id:'best-bp',key:'bp-best',none:'–'},{id:'best-sc',key:'sc-best',none:'–'},{id:'best-ws',key:'ws-solved',none:'0'},{id:'best-cw',key:'cw-solved',none:'0'}];
 GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const el=document.getElementById(g.id);if(el)el.textContent=v||g.none;});
 </script>
 
@@ -567,7 +601,7 @@ GAMES.forEach(g=>{let v=0;try{v=+localStorage.getItem(g.key)||0}catch(e){}const 
 // Home tab: one tile per section, each a link to that section's tab (e.g. #football).
 (()=>{
   const el=document.getElementById('tiles');
-  const SECTIONS=[['favorites','Your starred games'],['all','Every game in the arcade'],['sports',''],['football','',1],['soccer','',1],['tabletennis','',1],['puzzles',''],['home',''],['cards','']];
+  const SECTIONS=[['favorites','Your starred games'],['all','Every game in the arcade'],['sports',''],['football','',1],['soccer','',1],['tabletennis','',1],['puzzles',''],['home',''],['cards',''],['action','']];
   function build(){
     el.innerHTML='';
     SECTIONS.forEach(([cat,blurb,sub])=>{
