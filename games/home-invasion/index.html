@@ -115,7 +115,7 @@ button.big:focus-visible{outline:3px solid #5aa8ff;outline-offset:2px}
       <p class="goal">Two strangers just kicked in the doors of your house. Fight them off, then survive every level after. Each level is harder than the last.</p>
       <ul>
         <li><b>Them</b><span>Two body shots turn a person into a zombie. Two more shots and the zombie goes down. A head shot kills right away.</span></li>
-        <li><b>You</b><span>Get hit once and you stumble and turn into a zombie. Get hit again and you fall and die. Clearing a level cures you.</span></li>
+        <li><b>You</b><span>Get hit once and the camera pulls out of your eyes: you watch yourself stumble and turn into a zombie, then fight on as the zombie with your claws. Get hit again and you fall and die. Clearing a level cures you.</span></li>
         <li><b>Guns</b><span>You start with a knife, a handgun and a shotgun. Walk over any weapon lying around, or one an enemy drops, to grab it. Out of ammo? Fight with your fists.</span></li>
         <li><b>Phone</b><span>Left thumb moves. Drag on the right side to aim (up for head shots). Hold FIRE to shoot. Tap a weapon at the bottom to switch.</span></li>
         <li><b>Keys</b><span>W A S D move, mouse aims, click shoots, 1–8 or Q / E switch weapons.</span></li>
@@ -148,6 +148,7 @@ function beam(g,x1,y1,x2,y2,w1,w2,f){const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy)
 const ORDER=['fists','knife','handgun','shotgun','rifle','ak','grenade','bazooka'];
 const PW={
   fists:{name:'Fists',melee:1,range:1.1,rate:.42},
+  claws:{name:'Claws',melee:1,range:1.5,rate:.5},
   knife:{name:'Knife',melee:1,range:1.35,rate:.36},
   handgun:{name:'Handgun',rate:.3,spread:.012,pellets:1,range:22,pick:12,max:120,kick:.5},
   shotgun:{name:'Shotgun',rate:.85,spread:.075,pellets:8,range:13,pick:6,max:40,kick:1},
@@ -333,6 +334,41 @@ function renderPose(look,pose,weapon){
   drawBody(g,look,pose,weapon,skin,Z?8:tk?5:0,tk);
   g.restore();
   return c;
+}
+
+// You, seen from behind once you've been bitten — same clothes as the arms in first person
+const ME={skin:'#a8734e',shirt:'#2b3a4a',pants:'#2a3b5c',shoes:'#1a1a1a',hair:'#140d09',head:'fade',hat:'#1a1a1a',beard:false,hoodie:false};
+const MEF={};
+function meFrame(pose){return MEF[pose]||(MEF[pose]=pose[0]==='b'?renderBack(ME,pose):renderPose(ME,pose,'handgun'));}
+function renderBack(L,pose){
+  const c=mk(240,240),g=c.getContext('2d');g.scale(1.5,1.5);
+  const tk=pose==='bturn0'?.45:pose==='bturn1'?.8:1,Z=tk>=1,skin=mix(L.skin,'#8aa86e',tk*.8),shirt=Z?shade(L.shirt,-.15):L.shirt;
+  const wA=pose==='bwalk0',wB=pose==='bwalk1';
+  ell(g,80,155,28,5,'rgba(0,0,0,.35)');
+  g.save();
+  if(pose==='bturn0'){g.translate(80,156);g.rotate(-.12);g.translate(-80,-156);}else if(pose==='bturn1'){g.translate(80,156);g.rotate(.14);g.translate(-80,-156);}
+  const leg=(x,lift,ang)=>{g.save();g.translate(x,97);g.rotate(ang);R(g,-7.5,0,15,53-lift,L.pants,4);g.fillStyle='rgba(0,0,0,.2)';g.fillRect(-7.5,0,4,53-lift);ell(g,0,52-lift,9,5,L.shoes);g.restore();};
+  leg(71,wA?5:0,Z?.05:0);leg(89,wB?5:0,Z?-.08:0);
+  g.translate(0,Z?7:4);
+  g.beginPath();g.moveTo(61,52);g.quadraticCurveTo(62,44,72,43);g.lineTo(88,43);g.quadraticCurveTo(98,44,99,52);g.lineTo(97,98);
+  if(Z){for(let i=0;i<=6;i++)g.lineTo(97-i*34/6,i%2?92:99);}else g.lineTo(63,98);g.closePath();g.fillStyle=shirt;g.fill();
+  const gr=g.createLinearGradient(61,0,99,0);gr.addColorStop(0,'rgba(0,0,0,.3)');gr.addColorStop(.5,'rgba(255,255,255,.06)');gr.addColorStop(1,'rgba(0,0,0,.3)');g.fillStyle=gr;g.fill();
+  g.strokeStyle='rgba(0,0,0,.25)';g.lineWidth=1.2;g.beginPath();g.moveTo(70,50);g.quadraticCurveTo(80,56,90,50);g.stroke();
+  if(Z){ell(g,74,70,6,4,'rgba(90,15,15,.7)');ell(g,88,86,5,3,'rgba(90,15,15,.6)');g.strokeStyle='rgba(0,0,0,.5)';g.beginPath();g.moveTo(68,62);g.lineTo(77,66);g.moveTo(84,78);g.lineTo(93,74);g.stroke();}
+  else R(g,63,95,34,5,'#1b1a18');
+  R(g,74,36,12,10,shade(skin,-.18),3);
+  const hy=27+(Z?3:0);
+  ell(g,69,hy+1,2.8,4.2,shade(skin,-.1));ell(g,91,hy+1,2.8,4.2,shade(skin,-.1));
+  ell(g,80,hy,11,13.5,skin);g.fillStyle=L.hair;g.globalAlpha=.92;g.beginPath();g.ellipse(80,hy-1.5,11.3,12,0,0,TAU);g.fill();g.globalAlpha=1;
+  ell(g,80,hy+9,8,3.5,shade(skin,-.08));
+  if(Z){ell(g,76,hy-3,3,2.2,'rgba(60,90,40,.6)');ell(g,85,hy+4,2.5,1.8,'rgba(90,15,15,.6)');}
+  const arm=(sx,sy,hx,hy2,out)=>{const mx=(sx+hx)/2+out,my=(sy+hy2)/2+4;g.strokeStyle=shirt;g.lineWidth=11;g.lineCap='round';g.lineJoin='round';g.beginPath();g.moveTo(sx,sy);g.lineTo(mx,my);g.lineTo(hx,hy2);g.stroke();
+    g.beginPath();g.arc(hx,hy2,5.5,0,TAU);g.fillStyle=skin;g.fill();};
+  if(pose==='bturn0'){arm(63,50,72,hy-2,-10);arm(97,50,100,90,4);}
+  else if(pose==='bturn1'){arm(97,50,88,hy-2,10);arm(63,50,60,90,-4);}
+  else if(pose==='batk'){arm(63,50,48,20,-6);arm(97,50,112,20,6);}
+  else{const sw=wA?2:wB?-2:0;arm(63,50,57,36+sw,-6);arm(97,50,103,36-sw,6);}
+  g.restore();return c;
 }
 
 /* ================= props ================= */
@@ -554,7 +590,8 @@ function sfx(k,v=1){if(!AC)return;v=clamp(v,0,1.2);switch(k){
 
 /* ================= game state ================= */
 const P={x:2,y:2,yaw:0,pitch:0,eye:.58,state:'human',turnT:0,inv:0,dieT:0,roll:0,has:{},ammo:{},cur:'handgun',cool:0,fireT:9,swT:0,swTo:null,
-  moveAmt:0,walk:0,recoil:0,lyaw:0,lpitch:0,swX:0,swY:0,flash:0,hurtT:0,hurtA:0,shake:0,punch:0,zk:0};
+  moveAmt:0,walk:0,recoil:0,tp:0,atkT:0,zPrev:null,lyaw:0,lpitch:0,swX:0,swY:0,flash:0,hurtT:0,hurtA:0,shake:0,punch:0,zk:0};
+const CAM={x:0,y:0,eye:.58,back:0};
 let LV=null,enemies=[],projs=[],booms=[],puffs=[],pickups=[],running=false,started=false,eid=0,clock=0,hitMark=0,hitHead=0;
 let bestLevel=0;try{bestLevel=+localStorage.getItem('hi-best')||0}catch(e){}
 function cfg(n){
@@ -563,7 +600,7 @@ function cfg(n){
     fireMul:Math.max(.55,1.5-.1*(n-1)),sp:Math.min(1.25+.12*(n-1),2.6),zsp:Math.min(.9+.1*(n-1),2.2),pool};
 }
 function defaultInv(){return{has:{fists:1,knife:1,handgun:1,shotgun:1},ammo:{handgun:36,shotgun:12},cur:'handgun'}}
-function snapInv(){return JSON.parse(JSON.stringify({has:P.has,ammo:P.ammo,cur:P.cur}))}
+function snapInv(){return JSON.parse(JSON.stringify({has:P.has,ammo:P.ammo,cur:P.cur==='claws'?(P.zPrev||'handgun'):P.cur}))}
 let SAVE={level:1,score:0,inv:defaultInv()};
 
 function makeEnemy(x,y,weapon){
@@ -586,7 +623,7 @@ function startLevel(n,inv,score){
   LV=cfg(n);LV.score=score;LV.t=0;LV.spawned=0;LV.spawnT=1.5;LV.broke=false;LV.over=false;
   const def=MAPS[LV.map];map=buildMap(def);LV.home=!!def.home;LV.breakT=n===1?3.6:2.4;
   enemies=[];projs=[];booms=[];puffs=[];pickups=[];flow=null;flowCell=-1;
-  P.x=map.start.x;P.y=map.start.y;P.yaw=def.face?Math.atan2(def.face[1]-P.y,def.face[0]-P.x):def.yaw;P.pitch=0;P.eye=.58;P.roll=0;P.state='human';P.inv=0;P.turnT=0;P.dieT=0;P.hurtT=0;P.cool=.3;P.swT=0;P.recoil=0;P.zk=0;
+  P.tp=0;P.atkT=0;P.x=map.start.x;P.y=map.start.y;P.yaw=def.face?Math.atan2(def.face[1]-P.y,def.face[0]-P.x):def.yaw;P.pitch=0;P.eye=.58;P.roll=0;P.state='human';P.inv=0;P.turnT=0;P.dieT=0;P.hurtT=0;P.cool=.3;P.swT=0;P.recoil=0;P.zk=0;
   const I=JSON.parse(JSON.stringify(inv||defaultInv()));P.has=I.has;P.ammo=I.ammo;P.cur=I.has[I.cur]?I.cur:'handgun';
   P.has.fists=1;P.has.knife=1;P.has.handgun=1;P.has.shotgun=1;P.ammo.handgun=Math.max(P.ammo.handgun||0,24);P.ammo.shotgun=Math.max(P.ammo.shotgun||0,8);
   SAVE={level:n,score,inv:snapInv()};
@@ -617,7 +654,7 @@ function breakIn(){
 function remaining(){return LV?(LV.total-LV.spawned)+enemies.filter(e=>e.state!=='dead').length:0}
 function levelClear(){
   running=false;LV.over=true;sfx('clear');const bonus=150*LV.n;LV.score+=bonus;
-  P.state='human';P.turnT=0;
+  P.state='human';P.turnT=0;if(P.cur==='claws'){P.cur=P.zPrev&&P.has[P.zPrev]?P.zPrev:'handgun';}buildSlots();
   SAVE={level:LV.n+1,score:LV.score,inv:snapInv()};
   const nx=MAPS[(LV.n)%MAPS.length].name;
   showBanner('Level '+LV.n+' cleared','You survived'+(P.zk?' and you’re cured':'')+'. +'+bonus+' bonus. Next up: '+nx+', with more of them.','NEXT LEVEL',()=>startLevel(LV.n+1,SAVE.inv,SAVE.score),null,null,false);
@@ -651,7 +688,7 @@ function grab(p){
 }
 
 /* ================= player actions ================= */
-function switchTo(w){if(!P.has[w]||P.cur===w&&!P.swTo)return;P.swTo=w;P.swT=.3;}
+function switchTo(w){if(P.state!=='human')return;if(!P.has[w]||P.cur===w&&!P.swTo)return;P.swTo=w;P.swT=.3;}
 function hasAmmo(w){return PW[w].melee||(P.ammo[w]||0)>0}
 function autoSwitch(){for(const w of['ak','shotgun','rifle','handgun','bazooka']){if(P.has[w]&&hasAmmo(w)){switchTo(w);return;}}switchTo(P.has.knife?'knife':'fists');}
 function shootRay(ao,vo,range,assist){
@@ -665,13 +702,13 @@ function shootRay(ao,vo,range,assist){
   const t=best?best.t:wd;return{hit:best,t,x:P.x+dx*(t-.05),y:P.y+dy*(t-.05),z:P.eye+slope*t,wall:!best&&wd<range};
 }
 function fire(){
-  const w=P.cur,W=PW[w];if(P.cool>0||P.swT>0||!running)return;
+  const w=P.cur,W=PW[w];if(P.cool>0||P.swT>0||!running||P.state==='turning')return;
   if(!W.melee&&(P.ammo[w]||0)<=0){sfx('empty');P.cool=.35;autoSwitch();return;}
   P.cool=W.rate;P.fireT=0;if(!W.melee)P.ammo[w]--;
   const wob=P.state==='human'?1:1.7;
   if(W.thrown){const v=7,pz=clamp(P.pitch/proj,-.6,.9);projs.push({k:'gren',x:P.x+Math.cos(P.yaw)*.3,y:P.y+Math.sin(P.yaw)*.3,z:P.eye-.1,vx:Math.cos(P.yaw)*v,vy:Math.sin(P.yaw)*v,vz:2.2+pz*6,t:1.7,own:'p'});sfx('grenade');}
   else if(W.rocket){const v=12;projs.push({k:'rock',x:P.x+Math.cos(P.yaw)*.4,y:P.y+Math.sin(P.yaw)*.4,z:P.eye-.08,vx:Math.cos(P.yaw)*v,vy:Math.sin(P.yaw)*v,vz:v*P.pitch/proj,own:'p',t:4});sfx('bazooka');P.recoil=W.kick;}
-  else if(W.melee){P.punch=1-P.punch;const r=shootRay(0,0,W.range,.25);sfx(w);if(r.hit){hitEnemy(r.hit.e,r.hit.head);sfx('thud');}}
+  else if(W.melee){P.punch=1-P.punch;if(w==='claws'){P.atkT=.35;sfx('fists');sfx('groan',.5);}else sfx(w);const r=shootRay(0,0,W.range,w==='claws'?.35:.25);if(r.hit){hitEnemy(r.hit.e,r.hit.head);sfx('thud');}}
   else{
     const hits=new Map();
     for(let i=0;i<W.pellets;i++){const ao=(Math.random()-.5)*2*W.spread*wob,vo=(Math.random()-.5)*2*W.spread*wob*proj;
@@ -706,7 +743,7 @@ function killEnemy(e,head,boom){
 function playerHit(fx,fy){
   if(P.inv>0||!running||P.state==='dying')return;
   P.hurtT=.6;P.hurtA=Math.atan2(fy-P.y,fx-P.x);P.shake=.35;sfx('hurt');
-  if(P.state==='human'){P.state='turning';P.turnT=1.9;P.inv=3.4;P.zk=1;toast('You’ve been hit!','You’re turning into a zombie. One more hit and you’re dead.','bad');}
+  if(P.state==='human'){P.state='turning';P.turnT=1.9;P.inv=3.4;P.zk=1;firing=false;P.zPrev=P.swTo||P.cur;P.swTo=null;P.swT=0;toast('You’ve been hit!','You’re turning into a zombie. One more hit and you’re dead.','bad');}
   else{P.state='dying';P.dieT=0;toast('You’re down','','red');}
   hud(true);
 }
@@ -800,17 +837,18 @@ function update(dt){
    P.swX=lerp(P.swX,clamp(-yv*14,-70,70),Math.min(1,dt*9));P.swY=lerp(P.swY,clamp(pv*.25,-50,50),Math.min(1,dt*9));}
   if(LV.home&&!LV.broke&&LV.t>=LV.breakT)breakIn();
   // player state
-  if(P.state==='turning'){P.turnT-=dt;const k=Math.sin(clock*7)*.2;P.roll=k*clamp(P.turnT,0,1);P.yaw+=Math.sin(clock*5.3)*dt*.8;P.eye=.58-.07*Math.abs(Math.sin(clock*3));
-    if(P.turnT<=0){P.state='zombie';P.eye=.55;toast('You’re a zombie now','Keep fighting. Clear the level to be cured.','bad');hud(true);}}
+  if(P.state==='turning'){P.turnT-=dt;const k=Math.sin(clock*7)*.2;P.roll=k*clamp(P.turnT,0,1)*.5;P.yaw+=Math.sin(clock*5.3)*dt*.8;P.eye=.58-.07*Math.abs(Math.sin(clock*3));
+    if(P.turnT<=0){P.state='zombie';P.eye=.55;P.cur='claws';P.cool=.3;toast('You’re a zombie now','Claw them up close. Clear the level to be cured.','bad');buildSlots();hud(true);}}
   else if(P.state==='zombie'){P.roll=Math.sin(clock*1.3)*.035;P.eye=.55;}
-  else if(P.state==='dying'){P.dieT+=dt;const k=clamp(P.dieT/1.3,0,1),e=1-Math.pow(1-k,3);P.eye=lerp(.55,.07,e);P.roll=1.25*e;P.pitch*=.95;if(P.dieT>2&&!LV.over)gameOver();}
+  else if(P.state==='dying'){P.dieT+=dt;const k=clamp(P.dieT/1.3,0,1),e=1-Math.pow(1-k,3);P.eye=lerp(.55,.07,e);P.roll=1.25*e;P.pitch=P.tp>.5?lerp(P.pitch,-H*.32,Math.min(1,dt*3)):P.pitch*.95;if(P.dieT>2&&!LV.over)gameOver();}
   else{P.roll*=.9;}
+  P.tp=clamp(P.tp+(P.state==='human'?-2:1.5)*dt,0,1);if(P.atkT>0)P.atkT-=dt;
   // movement
   let fwd=0,str=0;
   if(keys.KeyW||keys.ArrowUp)fwd+=1;if(keys.KeyS||keys.ArrowDown)fwd-=1;if(keys.KeyD)str+=1;if(keys.KeyA)str-=1;
   if(keys.ArrowLeft)P.yaw-=2.4*dt;if(keys.ArrowRight)P.yaw+=2.4*dt;
   fwd+=-joy.y;str+=joy.x;const m=Math.hypot(fwd,str);if(m>1){fwd/=m;str/=m;}
-  const sp=P.state==='dying'?0:2.7*(P.state==='turning'?.5:P.state==='zombie'?.82:1);
+  const sp=P.state==='dying'?0:2.7*(P.state==='turning'?.45:P.state==='zombie'?1.05:1);
   const cs=Math.cos(P.yaw),sn=Math.sin(P.yaw);
   if(m>.05&&sp>0){moveCirc(P,(cs*fwd-sn*str)*sp*dt,(sn*fwd+cs*str)*sp*dt,.24);}
   P.moveAmt=lerp(P.moveAmt,Math.min(1,m)*(sp>0?1:0),Math.min(1,dt*8));P.walk+=dt*P.moveAmt*5;
@@ -825,6 +863,24 @@ function update(dt){
   if(LV.broke||!LV.home){if(LV.spawned>=LV.total&&enemies.every(e=>e.state==='dead'&&e.deadT>.6)&&P.state!=='dying'&&!LV.over)levelClear();}
   hudT-=dt;if(hudT<=0)hud();
 }
+
+/* ================= camera ================= */
+// tp = 0 looks out of your eyes; tp = 1 sits behind you so you can see yourself as a zombie
+function camUpdate(){
+  const k=P.tp*P.tp*(3-2*P.tp),dX=Math.cos(P.yaw),dY=Math.sin(P.yaw);let back=0;
+  let side=0;
+  if(k>0){const sd=castDist(P.x,P.y,-dY,dX,1);side=Math.max(0,Math.min(.42*k,sd-.3));
+    const ox=P.x-dY*side,oy=P.y+dX*side,d=castDist(ox,oy,-dX,-dY,2.2);back=Math.max(0,Math.min(1.6*k,d-.3));
+    CAM.x=ox-dX*back;CAM.y=oy-dY*back;}else{CAM.x=P.x;CAM.y=P.y;}
+  CAM.eye=lerp(P.eye,.86,k);CAM.back=back;
+}
+function mePose(){
+  if(P.state==='dying')return P.dieT<.35?'zfall':'zdead';
+  if(P.state==='turning')return P.turnT>1.25?'bturn0':((clock*6|0)%2?'bturn0':'bturn1');
+  if(P.atkT>0)return'batk';
+  return P.moveAmt>.2?((P.walk*1.6|0)%2?'bwalk0':'bwalk1'):'bstand';
+}
+const showMe=()=>P.tp>.05&&CAM.back>.35;
 
 /* ================= rendering ================= */
 const cv=$('view'),ctx=cv.getContext('2d');
@@ -846,7 +902,7 @@ const GREN=mk(32,32);{const g=GREN.getContext('2d');ell(g,16,17,9,11,'#4e5f2f');
 const ROCK=mk(48,32);{const g=ROCK.getContext('2d');flash(g,10,16,10);ell(g,28,16,12,7,'#4f5a32');ell(g,38,16,6,6,'#3a3a3a');}
 
 function render(){
-  const eye=P.eye,shk=P.shake*6,hz=(H>>1)+Math.round(P.pitch+(Math.random()-.5)*shk+Math.sin(P.walk*2)*1.2*P.moveAmt);
+  const eye=CAM.eye,shk=P.shake*6,hz=(H>>1)+Math.round(P.pitch+(Math.random()-.5)*shk+Math.sin(P.walk*2)*1.2*P.moveAmt);
   const dX=Math.cos(P.yaw),dY=Math.sin(P.yaw),pX=-dY,pY=dX,half=W/2,mw=map.w,mh=map.h,wall=map.wall,flo=map.floor,out=map.out;
   const outdoor=map.outdoor,fogR=outdoor?8:14,fogG=outdoor?11:11,fogB=outdoor?22:12,kf=outdoor?.055:.085;
   const lit=P.flash>0?1.35:1,cT=TX[map.def.ceil],FT=TEXN.map(n=>TX[n]);
@@ -860,7 +916,7 @@ function render(){
     if(dy===0){for(let x=0;x<W;x++)buf[p++]=fog;continue;}
     const rd=(fl?eye:(1-eye))*proj/dy;
     let s=Math.round(clamp(256*(1.08-rd*kf),26,256)*lit*(fl?1:.8));if(s>256)s=256;const s2=256-s;
-    let fx=P.x+rd*rx0,fy=P.y+rd*ry0;const sx=rd*(rx1-rx0)/W,sy=rd*(ry1-ry0)/W;
+    let fx=CAM.x+rd*rx0,fy=CAM.y+rd*ry0;const sx=rd*(rx1-rx0)/W,sy=rd*(ry1-ry0)/W;
     const yaw0=P.yaw*proj;
     for(let x=0;x<W;x++,p++,fx+=sx,fy+=sy){
       if(fx<0||fy<0||fx>=mw||fy>=mh){if(!fl&&outdoor){buf[p]=0xff000000|(sB<<16)|(sG<<8)|sR;}else buf[p]=fog;continue;}
@@ -873,7 +929,7 @@ function render(){
     }
   }
   // walls
-  const px=P.x,py=P.y,pmx=Math.floor(px),pmy=Math.floor(py);
+  const px=CAM.x,py=CAM.y,pmx=Math.floor(px),pmy=Math.floor(py);
   for(let x=0;x<W;x++){
     const cam=(x-half)/proj,rdx=dX+pX*cam,rdy=dY+pY*cam;let mx=pmx,my=pmy;const ddx=Math.abs(1/rdx),ddy=Math.abs(1/rdy);
     let stx,sty,sdx,sdy;if(rdx<0){stx=-1;sdx=(px-mx)*ddx}else{stx=1;sdx=(mx+1-px)*ddx}if(rdy<0){sty=-1;sdy=(py-my)*ddy}else{sty=1;sdy=(my+1-py)*ddy}
@@ -895,6 +951,7 @@ function render(){
   for(const o of map.objs)add(o.x,o.y,o.img,o.sw,o.sh,o.z0);
   for(const p of pickups)add(p.x,p.y,iconCanvas(p.w),.5,.25,.02+Math.abs(Math.sin(p.t*2.2))*.06);
   for(const e of enemies){if(e.state==='dead'&&e.deadT>40)continue;add(e.x,e.y,frameOf(e,poseOf(e)),1,1,0);}
+  if(showMe())add(P.x,P.y,meFrame(mePose()),1,1,0);
   for(const p of projs){if(p.k==='gren')add(p.x,p.y,GREN,.16,.16,p.z-.08);else add(p.x,p.y,ROCK,.3,.2,p.z-.1);}
   for(const b of booms){const s=.8+b.t*3.2;add(b.x,b.y,BOOMS[Math.min(7,b.t/.7*8|0)],s,s,b.z-s*.3+.3);}
   for(const p of puffs){const s=p.k==='smoke'?.25+p.t*.6:.12+p.t*.5;add(p.x,p.y,PUFF[p.k],s,s,p.z-s/2);}
@@ -910,7 +967,7 @@ function render(){
   }
   // present
   ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#000';ctx.fillRect(0,0,DW,DH);
-  ctx.imageSmoothingEnabled=false;ctx.save();ctx.translate(DW/2+(Math.random()-.5)*shk*dpr*2,DH/2);ctx.rotate(P.roll);const zs=1+Math.abs(P.roll)*.35;ctx.scale(zs,zs);
+  ctx.imageSmoothingEnabled=false;ctx.save();ctx.translate(DW/2+(Math.random()-.5)*shk*dpr*2,DH/2);ctx.rotate(P.roll*(1-P.tp*.9));const zs=1+Math.abs(P.roll*(1-P.tp*.9))*.35;ctx.scale(zs,zs);
   ctx.drawImage(low,-DW/2,-DH/2,DW,DH);ctx.restore();
   overlays();
 }
@@ -954,6 +1011,7 @@ const fpc=document.createElement('canvas'),fctx=fpc.getContext('2d');let shells=
 const EJECT={handgun:[175,-250,1],shotgun:[300,-60,2],rifle:[285,-120,1],ak:[300,-95,1]};
 function ejectShell(w){const e=EJECT[w];if(!e)return;shells.push({w,x:e[0],y:e[1],vx:rnd(500,800),vy:rnd(-750,-550),r:Math.random()*6,vr:rnd(-18,18),t:0});if(shells.length>14)shells.shift();}
 function drawFP(gpu){
+  if(P.tp>.98&&!shells.length)return;
   if(fpc.width!==DW||fpc.height!==DH){fpc.width=DW;fpc.height=DH;}
   const nowT=performance.now(),fdt=Math.min(.05,(nowT-(fpLast||nowT))/1000);fpLast=nowT;
   fctx.setTransform(1,0,0,1,0,0);fctx.clearRect(0,0,DW,DH);
@@ -962,7 +1020,7 @@ function drawFP(gpu){
   const bx=Math.sin(P.walk)*16*P.moveAmt,by=Math.abs(Math.cos(P.walk))*14*P.moveAmt;
   let skin='#a8734e';const zk=P.state==='zombie'||P.state==='dying'?1:P.state==='turning'?clamp(1-P.turnT/1.9,0,1):0;if(zk)skin=mix(skin,'#7f9a6a',zk);
   const ft=P.fireT,rate=(PW[w].rate||.4),ap=clamp(ft/Math.min(rate,.35),0,1),atk=ap<1?Math.sin(ap*Math.PI):0;
-  const dieDrop=P.state==='dying'?clamp(P.dieT/1,0,1)*600:0;
+  const dieDrop=(P.state==='dying'?clamp(P.dieT/1,0,1)*600:0)+P.tp*800;
   g.save();g.translate(DW/2+(bx+P.swX)*S,DH+(by+P.swY+lower+dieDrop+P.recoil*26)*S);g.scale(S,S);
   const veins=()=>{};
   switch(w){
@@ -1214,7 +1272,7 @@ void main(){
     for(const b of booms){const k=1-b.t/.7;L.push([b.x,b.y,b.z+.45,9,7*k,4*k,1.6*k,3]);}
     for(const p of projs)if(p.k==='rock')L.push([p.x,p.y,p.z,3.5,2.2,1.2,.4,2]);
     L.forEach(l=>l.d=Math.hypot(l[0]-P.x,l[1]-P.y));L.sort((a,b)=>a.d-b.d);L.length=Math.min(L.length,14);
-    let sh=0;L.forEach(l=>{if(l[7]&1){if(sh<5)sh++;else l[7]&=~1;}if((l[7]&2)&&!los(P.x,P.y,l[0],l[1]))l[7]&=~2;});
+    let sh=0;L.forEach(l=>{if(l[7]&1){if(sh<5)sh++;else l[7]&=~1;}if((l[7]&2)&&!los(CAM.x,CAM.y,l[0],l[1]))l[7]&=~2;});
     return L;}
   const amb=()=>map.outdoor?[.07,.08,.13]:[.075,.066,.06];
   const spot=()=>{const sl=P.pitch/proj,d=Math.hypot(1,sl);return[Math.cos(P.yaw)/d,Math.sin(P.yaw)/d,sl/d];};
@@ -1222,7 +1280,7 @@ void main(){
     const a=amb();let r=a[0],g=a[1],b=a[2];
     for(const l of LIGHTS){const dx=l[0]-x,dy=l[1]-y,dz=l[2]-z,d=Math.hypot(dx,dy,dz);if(d>=l[3])continue;let at=1-d/l[3];at=at*at/(1+d*d*.35)*.75;
       if((l[7]&1)&&!los(x,y,l[0],l[1]))continue;r+=l[4]*at;g+=l[5]*at;b+=l[6]*at;}
-    const s=spot(),dx=x-P.x,dy=y-P.y,dz=z-P.eye,d=Math.hypot(dx,dy,dz)||1,cs=(dx*s[0]+dy*s[1]+dz*s[2])/d,sp=clamp((cs-.86)/(.95-.86),0,1),k=sp*sp*(3-2*sp)*FLASH()/(1+d*d*.1)*.8;
+    const s=spot(),dx=x-CAM.x,dy=y-CAM.y,dz=z-CAM.eye,d=Math.hypot(dx,dy,dz)||1,cs=(dx*s[0]+dy*s[1]+dz*s[2])/d,sp=clamp((cs-.86)/(.95-.86),0,1),k=sp*sp*(3-2*sp)*FLASH()/(1+d*d*.1)*.8;
     r+=k;g+=k*.93;b+=k*.82;return[r,g,b];}
   const FLASH=()=>P.state==='dying'?.4:1.7;
   // dynamic resolution: drops when frames run slow
@@ -1243,8 +1301,8 @@ void main(){
     gl.useProgram(Pw.p);const U=Pw.u;
     gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,mapT);gl.uniform1i(U.uMap,0);
     gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D_ARRAY,arr);gl.uniform1i(U.uTex,1);
-    gl.uniform2f(U.uRes,w,h);gl.uniform2f(U.uPos,P.x,P.y);gl.uniform2f(U.uDir,dX,dY);gl.uniform2f(U.uPerp,-dY,dX);
-    gl.uniform1f(U.uProj,pj);gl.uniform1f(U.uHz,hz);gl.uniform1f(U.uEye,P.eye);gl.uniform1f(U.uTime,clock);gl.uniform1f(U.uFogK,fogK);
+    gl.uniform2f(U.uRes,w,h);gl.uniform2f(U.uPos,CAM.x,CAM.y);gl.uniform2f(U.uDir,dX,dY);gl.uniform2f(U.uPerp,-dY,dX);
+    gl.uniform1f(U.uProj,pj);gl.uniform1f(U.uHz,hz);gl.uniform1f(U.uEye,CAM.eye);gl.uniform1f(U.uTime,clock);gl.uniform1f(U.uFogK,fogK);
     gl.uniform2i(U.uMS,map.w,map.h);gl.uniform1i(U.uCeil,TEXN.indexOf(map.def.ceil));gl.uniform1i(U.uNL,LIGHTS.length);
     gl.uniform3fv(U.uFog,fog);gl.uniform3fv(U.uAmb,amb());gl.uniform3fv(U.uSpotDir,spot());gl.uniform3f(U.uSpot,FLASH(),.95,.86);
     const lp=new Float32Array(56),lc=new Float32Array(56);LIGHTS.forEach((l,i)=>{lp.set([l[0],l[1],l[2],l[3]],i*4);lc.set([l[4],l[5],l[6],l[7]],i*4);});
@@ -1252,10 +1310,11 @@ void main(){
     gl.bindVertexArray(vF);gl.drawArrays(gl.TRIANGLES,0,3);
     // sprites
     const list=[],pX=-dY,pY=dX;
-    const add=(x,y,im,sw,sh,z0,mode,dd)=>{const sx=x-P.x,sy=y-P.y,d=sx*dX+sy*dY;if(d<.18)return;list.push({x,y,d:d+(dd||0),dd:d,lat:sx*pX+sy*pY,im,sw,sh,z0,mode});};
+    const add=(x,y,im,sw,sh,z0,mode,dd)=>{const sx=x-CAM.x,sy=y-CAM.y,d=sx*dX+sy*dY;if(d<.18)return;list.push({x,y,d:d+(dd||0),dd:d,lat:sx*pX+sy*pY,im,sw,sh,z0,mode});};
     for(const o of map.objs){if(o.block||o.k==='o'||o.k==='x')add(o.x,o.y,SHADOW,o.sw*1.1,.07,0,'sh',.02);add(o.x,o.y,o.img,o.sw,o.sh,o.z0,o.k==='l'||o.k==='L'||o.k==='v'||o.k==='h'?'glow':'lit');}
     for(const p of pickups)add(p.x,p.y,iconCanvas(p.w),.5,.25,.02+Math.abs(Math.sin(p.t*2.2))*.06,'glow');
     for(const e of enemies){if(e.state==='dead'&&e.deadT>40)continue;if(e.state!=='dead')add(e.x,e.y,SHADOW,.7,.07,0,'sh',.02);add(e.x,e.y,frameOf(e,poseOf(e)),1,1,0,'lit');}
+    if(showMe()){add(P.x,P.y,SHADOW,.7,.07,0,'sh',.02);add(P.x,P.y,meFrame(mePose()),1,1,0,'lit');}
     for(const p of projs){if(p.k==='gren')add(p.x,p.y,GREN,.16,.16,p.z-.08,'lit');else add(p.x,p.y,ROCK,.3,.2,p.z-.1,'add');}
     for(const b of booms){const s=.8+b.t*3.2;add(b.x,b.y,BOOMS[Math.min(7,b.t/.7*8|0)],s,s,b.z-s*.3+.3,'add');}
     for(const p of puffs){const s=p.k==='smoke'?.25+p.t*.6:.12+p.t*.5;add(p.x,p.y,PUFF[p.k],s,s,p.z-s/2,p.k==='dust'?'add':'lit');}
@@ -1264,7 +1323,7 @@ void main(){
     gl.enable(gl.BLEND);gl.depthFunc(gl.LESS);gl.depthMask(false);gl.bindVertexArray(vQ);
     const fs=fog.map(v=>Math.pow(v,1/2.2));gl.uniform3fv(S.uFogS,fs);
     for(const s of list){
-      const sc=pj/s.dd,cx=w/2+s.lat*sc,wp=s.sw*sc,top=hz-(s.z0+s.sh-P.eye)*sc,hp=s.sh*sc;
+      const sc=pj/s.dd,cx=w/2+s.lat*sc,wp=s.sw*sc,top=hz-(s.z0+s.sh-CAM.eye)*sc,hp=s.sh*sc;
       if(cx+wp/2<0||cx-wp/2>w||top>h||top+hp<0)continue;
       let tint=[1,1,1];
       if(s.mode==='lit'||s.mode==='glow'){const L=lightAt(s.x,s.y,s.z0+s.sh*.6);tint=L.map(v=>Math.min(1.5,Math.pow(v*1.25,1/2.2)));if(s.mode==='glow')tint=tint.map(v=>Math.max(v,.85));else if(s.sw===1)tint=tint.map(v=>Math.max(v,.62));}
@@ -1285,7 +1344,7 @@ void main(){
     gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,DW,DH);gl.useProgram(Pc.p);const Cu=Pc.u;
     gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,sT);gl.uniform1i(Cu.uScene,0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,bA);gl.uniform1i(Cu.uBloom,1);gl.activeTexture(gl.TEXTURE0);
     const sk=P.shake*.012;gl.uniform2f(Cu.uRes,DW,DH);gl.uniform2f(Cu.uShake,(Math.random()-.5)*sk,(Math.random()-.5)*sk);
-    gl.uniform1f(Cu.uRoll,P.roll);gl.uniform1f(Cu.uZoom,1+Math.abs(P.roll)*.35);gl.uniform1f(Cu.uTime,clock);
+    const rl=P.roll*(1-P.tp*.9);gl.uniform1f(Cu.uRoll,rl);gl.uniform1f(Cu.uZoom,1+Math.abs(rl)*.35);gl.uniform1f(Cu.uTime,clock);
     gl.uniform1f(Cu.uHurt,clamp(P.hurtT*1.6,0,1));gl.uniform1f(Cu.uZombie,P.state==='zombie'||P.state==='dying'?1:P.state==='turning'?.55+.45*Math.sin(clock*9):0);
     gl.uniform1f(Cu.uDying,P.state==='dying'?clamp(P.dieT/2,0,1):0);
     gl.drawArrays(gl.TRIANGLES,0,3);gl.bindVertexArray(null);
@@ -1307,6 +1366,7 @@ function hud(force){
 }
 function buildSlots(){
   const el=$('slots');el.innerHTML='';
+  el.hidden=P.state!=='human';
   ORDER.forEach((w,i)=>{if(!P.has[w])return;const b=document.createElement('button');b.type='button';b.className='slot';b.dataset.w=w;b.setAttribute('aria-label',PW[w].name+' (key '+(i+1)+')');
     const c=mk(100,50);const g=c.getContext('2d');g.translate(50,26);wIcon(g,w,w==='grenade'?34:w==='fists'?40:w==='handgun'?52:w==='knife'?58:90);b.appendChild(c);b.appendChild(document.createElement('i'));
     b.addEventListener('click',e=>{e.stopPropagation();ac();switchTo(w);hud(true);});b.addEventListener('pointerdown',e=>e.stopPropagation());el.appendChild(b);});
@@ -1367,6 +1427,7 @@ function loop(t){
   const dt=Math.min(.05,(t-last)/1000);last=t;
   const intro=!$('intro').hidden;
   if(running&&!window.GD_PAUSED&&!intro)update(dt);
+  if(map)camUpdate();
   if(map){if(GLR){GLR.render();ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,DW,DH);overlays(true);}else render();}else{ctx.fillStyle='#000';ctx.fillRect(0,0,DW,DH);}
   requestAnimationFrame(loop);
 }
